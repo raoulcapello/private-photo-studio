@@ -1,54 +1,59 @@
 
 
-## Fix Intermittent "Source image could not be decoded" on Android Chrome
+## Add Tests for Essential Functionality
 
-### Root Cause
+### Overview
+Add tests covering the core UI components, the key user flows, and the specific fixes documented in the changelog. Tests will use the existing Vitest + React Testing Library setup.
 
-Line 152 in `useBackgroundRemoval.ts` uses `createImageBitmap(resizedBlob)` to draw the image onto the compositing canvas. On Android Chrome, `createImageBitmap` is known to intermittently fail -- the same reason the `resizeImageFile` helper already uses an `<img>` element instead.
+### Test Files to Create
 
-### Fix
+#### 1. `src/components/HeroSection.test.tsx` -- Landing Page
+- Renders the headline, subtext, and CTA button
+- Renders all three privacy badges ("No uploads", "No tracking", "Runs locally")
+- File input triggers `onFileSelect` callback when a file is chosen
+- Use cases grid renders all three items
 
-Replace the `createImageBitmap` call with an `<img>` element approach (consistent with how `resizeImageFile` already works):
+#### 2. `src/components/PreviewSection.test.tsx` -- Preview States
+- Shows "Original" card with the provided image
+- Shows progress bar and status message during `loading-model` state
+- Shows progress bar and status message during `processing` state
+- Shows result image and "Download PNG" button when `status === "done"`
+- Shows error message when `status === "error"`
+- Shows error log, "Copy error log" button, and "Report issue" link when error has `errorLog`
+- "Report issue" link contains a GitHub Issues URL with encoded error info
+- "Try another photo" button calls `onReset`
+- "Download PNG" button calls `onDownload`
 
-```ts
-// Before (flaky on Android Chrome):
-const imgBitmap = await createImageBitmap(resizedBlob);
-ctx.drawImage(imgBitmap, 0, 0);
+#### 3. `src/components/PrivacyFooter.test.tsx` -- Privacy Messaging
+- Renders the privacy statement text
+- Renders BRIA AI attribution link
+- Renders support/feedback/source/about links
 
-// After (reliable):
-const imgEl = await loadImageFromBlob(resizedBlob);
-ctx.drawImage(imgEl, 0, 0);
-```
+#### 4. `src/components/Header.test.tsx` -- Navigation
+- Renders app name "Private Photo Studio"
+- Renders "Editor" and "About" nav links
 
-### Changes
-
-#### `src/hooks/useBackgroundRemoval.ts`
-
-1. Add a small helper `loadImageFromBlob(blob: Blob): Promise<HTMLImageElement>` that creates an `<img>`, sets its `src` to a blob URL, waits for `onload`, and revokes the URL.
-2. Replace line 152 (`createImageBitmap`) with a call to this helper.
-3. Update CHANGELOG entry.
+#### 5. `src/hooks/useBackgroundRemoval.test.ts` -- Hook Logic (unit tests for pure functions)
+- Since the internal helpers (`isMobileDevice`, `buildErrorLog`, `resizeImageFile`, `loadImageFromBlob`) are not exported, we'll test them indirectly via the hook's behavior, or extract lightweight assertions where feasible.
+- Hook initializes with `status: "idle"` and null result/error
+- `reset()` returns state to idle
+- `downloadResult()` is a no-op when no result exists
 
 ### Technical Details
 
-**New helper:**
-```ts
-function loadImageFromBlob(blob: Blob): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const url = URL.createObjectURL(blob);
-    const img = new Image();
-    img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
-    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Failed to load image")); };
-    img.src = url;
-  });
-}
-```
+- All component tests wrap renders in `MemoryRouter` (needed for `NavLink` in Header)
+- `PreviewSection` tests cover every `ProcessingStatus` variant to ensure the correct UI is shown for each state
+- Error reporting tests verify the GitHub issue URL structure matches the pattern used in the component
+- No mocking of `@huggingface/transformers` needed -- we test the UI states, not the inference pipeline
+- Tests use `screen.getByText`, `getByRole`, `getByAlt` queries following Testing Library best practices
 
-This is the exact same pattern already used in `resizeImageFile` (lines 24-44), so it's consistent with the existing codebase.
+### Files to create
 
-### Files to modify
-
-| File | Change |
-|------|--------|
-| `src/hooks/useBackgroundRemoval.ts` | Add `loadImageFromBlob` helper, replace `createImageBitmap` call |
-| `CHANGELOG.md` | Document the fix |
+| File | What it tests |
+|------|---------------|
+| `src/components/HeroSection.test.tsx` | Landing page content, privacy badges, file selection |
+| `src/components/PreviewSection.test.tsx` | All processing states, error reporting UI, actions |
+| `src/components/PrivacyFooter.test.tsx` | Privacy copy, attribution, links |
+| `src/components/Header.test.tsx` | Navigation structure |
+| `src/hooks/useBackgroundRemoval.test.ts` | Hook initial state and reset behavior |
 
