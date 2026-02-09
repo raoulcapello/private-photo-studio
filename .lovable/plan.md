@@ -1,40 +1,84 @@
 
+# Developer Documentation Plan for pfppg
 
-# pfppg — Privacy-First Profile Picture Background Remover
+## File to Create
+Create a new file: `DEVELOPER.md` in the project root
 
-## Overview
-A single-page web app that removes photo backgrounds entirely in the browser using the RMBG-1.4 model via Transformers.js. No uploads, no accounts, no tracking — just fast, private background removal.
+## Content Structure
 
-## Design Direction
-Minimal, calm, and trustworthy. Clean whites and soft grays with a single accent color. Large typography, generous whitespace, and a linear top-to-bottom flow that guides users step by step.
+### 1. **Verifying Browser-Only Processing**
+This section will help developers confirm that images never leave the browser:
 
-## Page Flow
+- **Network Inspection Method**
+  - Open DevTools → Network tab
+  - Load an image and process it
+  - Show that the ONLY external requests are:
+    - Model config files from `huggingface.co` (not image data)
+    - WASM runtime files from `cdn.jsdelivr.net` (for fallback)
+    - NO image data is ever sent to any server
+  - Explain what requests ARE expected (model artifacts) vs. what should NEVER happen (image uploads)
 
-### 1. Hero Section
-- **Headline:** "Remove backgrounds. Keep photos private."
-- **Subtext:** "All processing happens in your browser—nothing is uploaded."
-- **CTA button:** "Select a photo" — opens the native file picker
-- **Privacy badges** displayed prominently: "No uploads", "No tracking", "Runs locally" — each with a small icon
+- **Code Review Approach**
+  - Point to `src/hooks/useBackgroundRemoval.ts` lines 46-48 where the image is converted to a local blob URL
+  - Highlight lines 58-80 where processing happens entirely on canvas (browser's `CanvasRenderingContext2D`)
+  - Note line 83-85 where result is exported as a local blob, never sent anywhere
+  - Explain that `createImageBitmap` and canvas operations are all browser APIs
 
-### 2. Preview & Processing Area
-- Appears after a photo is selected
-- **Before card** showing the original image
-- **After card** showing the result with a transparent checkerboard background
-- **Progress indicator** during processing with a friendly status message (e.g., "Loading model…", "Removing background…")
-- WebGPU is used when available; falls back to WASM automatically with no user action needed
+- **Browser API Evidence**
+  - Show that `URL.createObjectURL()` creates local, in-memory references
+  - Explain `canvas.toBlob()` generates data entirely in the browser
+  - Mention that the model (`@huggingface/transformers`) runs via WebGPU or WASM (both client-side runtimes)
 
-### 3. Download Section
-- Once processing completes, a prominent **"Download PNG"** button appears below the result
-- Option to **"Try another photo"** to reset and start over
+### 2. **Running Locally**
+Step-by-step guide for developers:
 
-### 4. Privacy Footer
-- Brief explanation of how it works: model runs in-browser, images never leave the device
-- No cookies, no analytics, no external requests beyond loading the app itself
+- **Prerequisites**
+  - Node.js 16+ (recommend checking with `node --version`)
+  - npm or bun (project uses bun.lockb)
 
-## Technical Approach
-- **Model:** RMBG-1.4 loaded via `@huggingface/transformers` package for in-browser inference
-- **Device selection:** Attempt WebGPU first, fall back to WASM
-- **No backend needed** — purely static, client-side app
-- Model assets bundled or loaded from same origin
-- Result rendered to a canvas and exported as a transparent PNG for download
+- **Installation Steps**
+  - Clone the repository
+  - Navigate to project directory
+  - `npm install` or `bun install`
+  - Explains what gets installed (React, Vite, @huggingface/transformers, Tailwind, shadcn-ui)
+
+- **Running Dev Server**
+  - `npm run dev` or `bun run dev`
+  - Server starts on `http://localhost:8080`
+  - Hot module replacement enabled (changes reflect instantly)
+  - Explains the HMR overlay is disabled in config for better UX
+
+- **Building for Production**
+  - `npm run build` or `bun run build`
+  - Output in `dist/` directory
+  - Explains that vite optimizes the build (code splitting, minification)
+  - Can be served as static files anywhere
+
+- **Testing**
+  - `npm run test` or `bun run test`
+  - `npm run test:watch` for watch mode
+  - Uses Vitest
+
+### 3. **Key Files to Understand**
+Brief guide to architecture:
+
+- `src/hooks/useBackgroundRemoval.ts` - Core business logic
+- `src/pages/Index.tsx` - Main orchestration
+- `src/components/` - UI components (Hero, Preview, Footer)
+- `vite.config.ts` - Build and dev server configuration
+
+### 4. **Technical Decisions Explained**
+Address common "why" questions:
+
+- Why WebGPU first, then WASM fallback? (Performance + compatibility)
+- Why canvas compositing? (Proper alpha channel handling for transparent PNG)
+- Why local blob URLs? (Memory efficient, no server round-trip)
+- Why RMBG-1.4? (Accurate, lightweight, open-source)
+
+## Tone & Approach
+- Written for developers (not beginners, but not assuming expert knowledge of these specific tools)
+- Use practical verification steps (network tab inspection)
+- Provide code line references
+- Explain "why" behind technical choices
+- Include troubleshooting tips (e.g., if WebGPU not available, WASM fallback handles it)
 
