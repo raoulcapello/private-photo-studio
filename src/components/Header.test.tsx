@@ -11,9 +11,11 @@ describe("Header", () => {
       </MemoryRouter>
     );
 
-  it("renders app name", () => {
+  it("renders app name with logo", () => {
     renderHeader();
     expect(screen.getByText("Private Photo Studio")).toBeInTheDocument();
+    const logo = document.querySelector('svg[aria-hidden="true"]');
+    expect(logo).toBeInTheDocument();
   });
 
   it("renders Editor nav link", () => {
