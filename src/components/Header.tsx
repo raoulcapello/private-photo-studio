@@ -13,7 +13,7 @@ export function Header() {
           to="/"
           className="flex items-center gap-2 text-lg font-semibold text-foreground hover:text-primary transition-colors"
         >
-          <img src="/logo-icon.png" alt="" className="h-7 w-7 object-contain" aria-hidden="true" />
+          <img src="/logo-icon.png" alt="" className="h-10 w-10 object-contain" aria-hidden="true" />
           Private Photo Studio
         </NavLink>
 
