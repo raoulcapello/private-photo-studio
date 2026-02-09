@@ -1,79 +1,92 @@
 
 
-## Background Color Picker + Preset Color Results
+## Eraser Brush for Artifact Cleanup
 
 ### Overview
 
-When the result is ready, show the transparent-background result plus 3 preset color variants. Add a color picker so the user can choose a custom background color. If a custom color is selected, that result appears first; otherwise transparent comes first. The download button downloads whichever variant the user has selected.
+Add an eraser brush tool that lets users paint over leftover background artifacts to make them transparent. The brush appears as a toggle next to the existing color picker row, and edits are applied directly to the result image. Undo support is included.
 
-All compositing happens client-side on a canvas. The hook already stores the transparent PNG blob. We reuse that transparent image to composite colored backgrounds on-the-fly in the UI -- no re-processing needed.
+### User Flow
+
+1. After background removal completes, the user sees the result as today.
+2. A new "Eraser" toggle button appears in the toolbar row (next to the color swatches).
+3. When active, the cursor changes to a circle brush and the user can paint on the Result image to erase artifacts (set pixels to transparent).
+4. A brush size slider appears while the eraser is active.
+5. An "Undo" button lets the user revert the last stroke.
+6. Eraser edits update the underlying result blob, so the color picker previews and download all reflect the cleaned-up image.
+7. Clicking "Eraser" again deactivates it.
+
+### Layout (when eraser is active)
+
+```text
+[Original]         [Result - interactive canvas]
+
+Eraser: [ON]  Size: [----o----]  [Undo]
+
+Variants: [transparent] [white] [gray] [navy] [+ custom]
+
+[Download PNG]  [Try another photo]
+```
 
 ### Changes
 
-#### 1. `src/hooks/useBackgroundRemoval.ts` -- Add `downloadWithBackground` method
+#### 1. New component: `src/components/EraserCanvas.tsx`
 
-Add a new function `downloadWithBackground(color: string | null)` that:
-- If `color` is null, downloads the existing transparent PNG (current behavior).
-- If `color` is a hex string, draws the color on a canvas, composites the transparent result on top, and downloads that.
+A canvas overlay component that:
+- Renders the result image on a `<canvas>` element (replacing the `<img>` when eraser mode is active).
+- Shows the selected background color (or checkerboard) behind the image, matching the existing preview behavior.
+- Tracks mouse/touch events to paint transparent strokes (`globalCompositeOperation = "destination-out"`).
+- Accepts `brushSize` as a prop.
+- Shows a circular cursor preview that follows the pointer.
+- On each stroke end (mouseup/touchend), calls `onEdit(updatedBlob)` to push the new image state upward.
+- Works on both desktop (mouse) and mobile (touch).
 
-#### 2. `src/components/PreviewSection.tsx` -- Add color picker + preset thumbnails
+#### 2. `src/hooks/useBackgroundRemoval.ts` -- Add `updateResult` method
 
-After the current "Result" card (when `status === "done"`), add a new section:
+Add a new `updateResult(blob: Blob)` function that:
+- Updates `resultBlobRef.current` with the new blob.
+- Revokes the old `resultUrl` and creates a new one.
+- Updates state so all downstream consumers (color previews, download) use the edited image.
 
-- **Selected result card**: Shows the currently selected variant (transparent or colored) as the main large preview.
-- **Thumbnail row**: 4 small clickable thumbnails below the main result:
-  1. Transparent (checkerboard background)
-  2. White (`#FFFFFF`)
-  3. Light gray (`#E5E7EB`)
-  4. Navy blue (`#1E3A5F`)
-- **Color picker**: A small "Custom color" button with an HTML `<input type="color">` for picking any color.
-- Clicking a thumbnail selects it as the active preview and download target.
+Also add undo support:
+- Maintain a `historyRef` (array of Blobs, capped at ~20 entries).
+- `updateResult` pushes the previous blob onto the history stack.
+- New `undoEdit()` function pops the last blob and restores it.
+- Expose `undoEdit` and `canUndo` (boolean) from the hook.
 
-**Layout (when done)**:
-```text
-  [Original]         [Result - selected variant]
+#### 3. `src/components/PreviewSection.tsx` -- Integrate eraser UI
 
-  Variants: [transparent] [white] [gray] [navy] [+ custom color picker]
+- Add `eraserActive` boolean state and `brushSize` state (default 20, range 5-80).
+- Import `EraserCanvas` component.
+- When `eraserActive` is true and `status === "done"`, render `<EraserCanvas>` instead of the static `<img>` in the Result card.
+- Add a toolbar row between the Result cards and the color swatches containing:
+  - An "Eraser" toggle button (uses `Eraser` icon from lucide-react).
+  - A brush size slider (using the existing `Slider` component) -- only visible when eraser is active.
+  - An "Undo" button (uses `Undo2` icon) -- only visible when eraser is active and `canUndo` is true.
+- Accept `onUpdateResult`, `onUndo`, and `canUndo` as new props.
 
-  [Download PNG]  [Try another photo]
-```
+#### 4. `src/pages/Index.tsx` -- Wire new props
 
-#### 3. `src/components/PreviewSection.tsx` -- Update props
+Pass `updateResult`, `undoEdit`, and `canUndo` from the hook to `PreviewSection`.
 
-- Accept `downloadWithBackground: (color: string | null) => void` as a new prop.
-- Manage `selectedColor: string | null` state internally (null = transparent).
+#### 5. `CHANGELOG.md` -- Add entry
 
-#### 4. `src/pages/Index.tsx` -- Pass new prop
-
-Pass `downloadWithBackground` from the hook to `PreviewSection`.
-
-#### 5. `CHANGELOG.md` -- Add entry for this feature
-
-Add a new dated section documenting the background color picker feature:
-- Color picker and 3 preset background color options added to the result view.
-- Custom color support via native color input.
-- Download composites the selected background color client-side.
-
-### Preset colors
-
-| Swatch | Hex | Label |
-|--------|-----|-------|
-| Checkerboard | null | Transparent |
-| White | #FFFFFF | White |
-| Light gray | #E5E7EB | Gray |
-| Navy | #1E3A5F | Navy |
+Document the eraser brush feature.
 
 ### Technical details
 
-- Thumbnails show the transparent PNG `<img>` over a CSS `backgroundColor` -- no extra canvas needed for preview. Canvas compositing only happens at download time.
-- The color picker uses a native `<input type="color">` styled as a small swatch button.
+- The eraser canvas uses `globalCompositeOperation = "destination-out"` with a round brush to punch transparent holes in the image. This is a standard Canvas 2D technique -- no extra libraries needed.
+- The canvas dimensions match the actual image dimensions. CSS scaling ensures it fits in the preview area (same `max-h-72` constraint as the current `<img>`).
+- Touch support uses `touchstart`/`touchmove`/`touchend` with `e.preventDefault()` to avoid scrolling while drawing.
+- History is stored as an array of Blobs (not data URLs) to minimize memory. Capped at 20 entries.
+- The `resultUrl` object URL is revoked and recreated on each edit to ensure React re-renders the color swatch thumbnails.
 
-### Files to modify
+### Files to create/modify
 
-| File | Change |
+| File | Action |
 |------|--------|
-| `src/hooks/useBackgroundRemoval.ts` | Add `downloadWithBackground(color)` method |
-| `src/components/PreviewSection.tsx` | Add color state, thumbnail row, color picker, update main preview |
-| `src/pages/Index.tsx` | Pass `downloadWithBackground` prop |
-| `CHANGELOG.md` | Add entry for background color picker feature |
-
+| `src/components/EraserCanvas.tsx` | Create -- canvas component with eraser painting |
+| `src/hooks/useBackgroundRemoval.ts` | Modify -- add `updateResult`, undo history, `undoEdit`, `canUndo` |
+| `src/components/PreviewSection.tsx` | Modify -- add eraser toggle, brush slider, undo button, swap img/canvas |
+| `src/pages/Index.tsx` | Modify -- pass new props |
+| `CHANGELOG.md` | Modify -- add entry |
