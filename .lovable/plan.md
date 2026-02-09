@@ -1,58 +1,31 @@
 
 
-## Add Temporary "Test Error Report" Button
+## Remove Temporary "Test Error Report" Button
 
-### What's Changing
-
-Add a temporary button that appears after successful image processing (status === "done") to simulate an error and test the error log generation + GitHub issue reporting UI. This button will be removed in a future update.
+### Overview
+Remove the temporary test button and keep the error reporting UI (error log, copy button, report issue link) only for actual errors.
 
 ### Changes
 
-#### `src/components/PreviewSection.tsx`
+#### 1. `src/components/PreviewSection.tsx`
+- Remove the `onSimulateError` prop from the interface and destructuring
+- Remove the "Test error report" button (lines 137-142)
 
-- Add a "Test Error Report" button (styled as a small outline/ghost button) next to the existing action buttons when `status === "done"`
-- Clicking it will trigger a callback that simulates an error state
+#### 2. `src/pages/Index.tsx`
+- Remove `simulateError` from the `useBackgroundRemoval()` destructuring
+- Remove the `onSimulateError={simulateError}` prop from `PreviewSection`
 
-#### `src/hooks/useBackgroundRemoval.ts`
+#### 3. `src/hooks/useBackgroundRemoval.ts`
+- Remove the `simulateError` callback function
+- Remove `simulateError` from the return statement
 
-- Export a new `simulateError` function from the hook that:
-  - Calls `buildErrorLog` with device `"wasm"`, a fake file, and a synthetic error
-  - Sets state to `status: "error"` with a test error message and the generated `errorLog`
-  - This lets us test the full error UI (pre block, copy button, report issue link) without actually causing a failure
-
-#### `src/pages/Index.tsx`
-
-- Destructure `simulateError` from `useBackgroundRemoval()` and pass it to `PreviewSection` as `onSimulateError`
-
-### Technical Details
-
-**Simulated error in the hook:**
-```text
-simulateError = useCallback(() => {
-  const fakeFile = new File([""], "test-image.jpg", { type: "image/jpeg" });
-  Object.defineProperty(fakeFile, "size", { value: 3_200_000 });
-  const fakeError = new Error("Simulated error for testing error report UI");
-  const log = buildErrorLog("wasm", fakeFile, fakeError);
-  setState({
-    status: "error",
-    statusMessage: "",
-    resultUrl: null,
-    error: fakeError.message,
-    errorLog: log,
-  });
-}, []);
-```
-
-**Button in PreviewSection (temporary, next to "Try another photo"):**
-- Label: "Test error report"
-- Variant: `ghost`, size: `sm`
-- Only visible when `status === "done"`
+No other changes needed -- the error log generation and reporting UI in the error state remains intact and will activate whenever a real processing error occurs.
 
 ### Files to modify
 
 | File | Change |
 |------|--------|
-| `src/hooks/useBackgroundRemoval.ts` | Add `simulateError` function, export it |
-| `src/components/PreviewSection.tsx` | Add optional `onSimulateError` prop, render test button when done |
-| `src/pages/Index.tsx` | Pass `simulateError` through to PreviewSection |
+| `src/components/PreviewSection.tsx` | Remove `onSimulateError` prop and test button |
+| `src/pages/Index.tsx` | Remove `simulateError` usage |
+| `src/hooks/useBackgroundRemoval.ts` | Remove `simulateError` function and export |
 
