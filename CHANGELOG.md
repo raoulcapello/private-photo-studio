@@ -2,6 +2,15 @@
 
 ## 2026-02-09
 
+### Added: Background color picker and preset variants
+
+- Result view now shows 4 variant thumbnails: Transparent, White, Gray, and Navy.
+- Users can pick a custom background color via native color input.
+- Download composites the selected background color client-side on a canvas.
+- Transparent remains the default; selecting a custom color highlights it.
+
+## 2026-02-09
+
 ### Fixed: Intermittent "Source image could not be decoded" on Android Chrome
 
 **Problem:** `createImageBitmap()` intermittently fails on Android Chrome during compositing, even after the image has been successfully downscaled and processed.

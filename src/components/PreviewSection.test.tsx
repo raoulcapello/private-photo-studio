@@ -11,6 +11,7 @@ const baseProps = {
   errorLog: null,
   onDownload: vi.fn(),
   onReset: vi.fn(),
+  downloadWithBackground: vi.fn(),
 };
 
 describe("PreviewSection", () => {
@@ -59,18 +60,18 @@ describe("PreviewSection", () => {
     ).toBeInTheDocument();
   });
 
-  it("calls onDownload when download button is clicked", () => {
-    const onDownload = vi.fn();
+  it("calls downloadWithBackground when download button is clicked", () => {
+    const downloadWithBackground = vi.fn();
     render(
       <PreviewSection
         {...baseProps}
         status="done"
         resultUrl="blob:http://localhost/result"
-        onDownload={onDownload}
+        downloadWithBackground={downloadWithBackground}
       />
     );
     fireEvent.click(screen.getByRole("button", { name: /download png/i }));
-    expect(onDownload).toHaveBeenCalled();
+    expect(downloadWithBackground).toHaveBeenCalledWith(null);
   });
 
   it("shows error message on error status", () => {
