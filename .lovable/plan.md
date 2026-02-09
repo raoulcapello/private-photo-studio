@@ -1,79 +1,75 @@
 
-
-## Add FOSS Section and MIT License
+## Update About Page and Footer
 
 ### Overview
+Add visual hierarchy and clarity to the About page, move the model limitation disclaimer from footer to a new dedicated section, and update footer links.
 
-Add a "Free & Open Source" section to the About page explaining the project's open-source nature and MIT license, plus create the appropriate license file.
+### Changes to `src/pages/About.tsx`
 
----
+**1. Update "Why Privacy Matters" heading (line 119)**
+   - Add a `Shield` icon in the header (similar to the "Free & Open Source" section style)
+   - The section already uses `Shield` in the use case cards, but will add it here for visual consistency
 
-### 1. License Choice: MIT
+**2. Add new "Model Accuracy" section (after "Why Privacy Matters", before "Free & Open Source")**
+   - Insert a new section with heading: "Model Accuracy & Limitations"
+   - Add an appropriate icon (suggestion: `AlertCircle` or `Image` for visual representation)
+   - Move the disclaimer text: "The model may not handle all pictures equally well—try different pictures and see what works best."
+   - Expand the explanation to contextualize why this happens
+   - Keep the same styling pattern as "Free & Open Source" section
 
-- MIT is highly permissive and simple (use, copy, modify, distribute, even commercially) as long as recipients get the copyright notice and license text.
+**3. Import additional icon**
+   - Add `AlertCircle` (or `Image`) to the lucide-react imports at line 4
 
-- Keeping the code MIT while treating RMBG‑1.4 as a separately licensed asset avoids any implication that the model is “open source” or under MIT, which it is not.
+### Changes to `src/components/PrivacyFooter.tsx`
 
----
+**1. Remove Disclaimer paragraph (lines 30-34)**
+   - Delete the entire disclaimer section with the text about model limitations
 
-### 2. New License File
+**2. Update "Feedback welcome" link (line 47-53)**
+   - Change `href="mailto:raoulcapello@proton.me"` to `href="https://github.com/raoulcapello/private-photo-studio/issues"`
+   - Keep the text "Feedback welcome" (or could change to "Report issues" for clarity, but keeping current text)
 
-Create `LICENSE` in the project root:
+**3. Update "More about me" label (line 70)**
+   - Change text from "More about me" to "About the developer"
 
-```text
-The MIT License (MIT)
-
-Copyright (c) 2026 Raoul Capello
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-```
-
----
-
-### 3. New Section in About Page
-
-Add below "Why Privacy Matters" (after line 128):
-
-**Section: Free & Open Source**
+### File Structure Summary
 
 ```text
-H2: Free & Open Source
-
-This project is Free and Open Source Software (FOSS), released under the 
-MIT license. You're welcome to view the source code, learn from it, 
-and contribute improvements.
-
-Key points:
-• Free to use for personal and non-commercial purposes
-• Source code available on GitHub
-• Contributions and feedback welcome
-• Commercial use requires permission
-
-[Link to license on GitHub repository]
-[Link to GitHub repository]
+About.tsx sections (top to bottom):
+1. Header/Title
+2. What Is This Tool?
+3. Perfect For (use cases grid)
+4. How It Works (steps)
+5. Why Privacy Matters ← add Shield icon to heading
+6. Model Accuracy & Limitations ← NEW SECTION with AlertCircle/Image icon
+7. Free & Open Source
 ```
 
-Uses the `Code` icon from lucide-react for visual consistency with the existing section style.
+```text
+PrivacyFooter.tsx structure:
+1. Privacy Section (Lock icon)
+2. Model Attribution (BRIA AI link)
+3. Support & Feedback links:
+   - Support development (Liberapay)
+   - Feedback welcome (GitHub Issues) ← URL updated
+   - Source code (GitHub)
+   - About the developer ← label updated
+```
 
----
+### Implementation Details
 
-### 4. Files to Create/Modify
+**Icon choice for "Model Accuracy & Limitations"**: `AlertCircle` provides a clear visual signal about limitations/considerations. Alternative: `Image` to stay thematic with photos.
 
-| File | Action | Purpose |
-|------|--------|---------|
-| `LICENSE` | Create | MIT license file |
-| `src/pages/About.tsx` | Modify | Add "Free & Open Source" section after "Why Privacy Matters" |
+**Content for new section**:
+```
+Heading: Model Accuracy & Limitations
+Icon: AlertCircle
+Body: Keep the existing disclaimer text, optionally expanded with brief explanation of why model accuracy varies (e.g., lighting, pose, clothing contrast).
+```
 
----
-
-### 5. Technical Notes
-
-- Import `Code` icon from lucide-react (already available in the package)
-- Use same section styling as existing sections (mb-16, text-2xl heading, etc.)
-- Include external links to license and GitHub with proper `target="_blank"` and `rel="noopener noreferrer"`
-- Keep copy concise with bullet points for scannability
+### Technical Notes
+- All changes use existing Tailwind classes and lucide-react icons
+- Maintains consistent spacing (mb-16 for sections before the last one, mb-8 for the last section)
+- Keeps the same heading style (text-2xl font-semibold) and icon styling pattern (p-2 rounded-lg bg-primary/10)
+- No breaking changes to component props or exports
 
