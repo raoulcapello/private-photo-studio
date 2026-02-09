@@ -204,19 +204,5 @@ export function useBackgroundRemoval() {
     URL.revokeObjectURL(url);
   }, []);
 
-  const simulateError = useCallback(() => {
-    const fakeFile = new File([""], "test-image.jpg", { type: "image/jpeg" });
-    Object.defineProperty(fakeFile, "size", { value: 3_200_000 });
-    const fakeError = new Error("Simulated error for testing error report UI");
-    const log = buildErrorLog("wasm", fakeFile, fakeError);
-    setState({
-      status: "error",
-      statusMessage: "",
-      resultUrl: null,
-      error: fakeError.message,
-      errorLog: log,
-    });
-  }, []);
-
-  return { ...state, processImage, reset, downloadResult, simulateError };
+  return { ...state, processImage, reset, downloadResult };
 }
