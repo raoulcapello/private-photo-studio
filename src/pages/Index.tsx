@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import { HeroSection } from "@/components/HeroSection";
 import { PreviewSection } from "@/components/PreviewSection";
 import { PrivacyFooter } from "@/components/PrivacyFooter";
+import { Header } from "@/components/Header";
 import { useBackgroundRemoval } from "@/hooks/useBackgroundRemoval";
 
 const Index = () => {
@@ -26,7 +27,8 @@ const Index = () => {
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <main className="flex-1">
+      <Header />
+      <main className="flex-1 pt-14">
         {!originalUrl ? (
           <HeroSection onFileSelect={handleFileSelect} />
         ) : (
