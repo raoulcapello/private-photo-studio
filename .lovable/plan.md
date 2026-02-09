@@ -1,92 +1,37 @@
 
 
-## Eraser Brush for Artifact Cleanup
+## Hide Eraser on Mobile + Add Desktop Hint + Update About Page
 
 ### Overview
 
-Add an eraser brush tool that lets users paint over leftover background artifacts to make them transparent. The brush appears as a toggle next to the existing color picker row, and edits are applied directly to the result image. Undo support is included.
-
-### User Flow
-
-1. After background removal completes, the user sees the result as today.
-2. A new "Eraser" toggle button appears in the toolbar row (next to the color swatches).
-3. When active, the cursor changes to a circle brush and the user can paint on the Result image to erase artifacts (set pixels to transparent).
-4. A brush size slider appears while the eraser is active.
-5. An "Undo" button lets the user revert the last stroke.
-6. Eraser edits update the underlying result blob, so the color picker previews and download all reflect the cleaned-up image.
-7. Clicking "Eraser" again deactivates it.
-
-### Layout (when eraser is active)
-
-```text
-[Original]         [Result - interactive canvas]
-
-Eraser: [ON]  Size: [----o----]  [Undo]
-
-Variants: [transparent] [white] [gray] [navy] [+ custom]
-
-[Download PNG]  [Try another photo]
-```
+Hide the eraser tool on mobile devices and replace it with a short informational message. Update the About page with a more detailed explanation of platform-specific capabilities and limitations.
 
 ### Changes
 
-#### 1. New component: `src/components/EraserCanvas.tsx`
+#### 1. `src/components/PreviewSection.tsx` -- Conditionally hide eraser on mobile
 
-A canvas overlay component that:
-- Renders the result image on a `<canvas>` element (replacing the `<img>` when eraser mode is active).
-- Shows the selected background color (or checkerboard) behind the image, matching the existing preview behavior.
-- Tracks mouse/touch events to paint transparent strokes (`globalCompositeOperation = "destination-out"`).
-- Accepts `brushSize` as a prop.
-- Shows a circular cursor preview that follows the pointer.
-- On each stroke end (mouseup/touchend), calls `onEdit(updatedBlob)` to push the new image state upward.
-- Works on both desktop (mouse) and mobile (touch).
+- Import `useIsMobile` from `@/hooks/use-mobile`.
+- Wrap the eraser toolbar block (lines 165-195) in a `!isMobile` check so the Eraser button, brush size slider, and Undo button are not rendered on mobile.
+- When `isMobile` is true and `status === "done"`, show a small muted text instead:
+  *"For advanced editing tools like the eraser brush, try using a desktop browser."*
 
-#### 2. `src/hooks/useBackgroundRemoval.ts` -- Add `updateResult` method
+#### 2. `src/pages/About.tsx` -- Add "Platform Differences" section
 
-Add a new `updateResult(blob: Blob)` function that:
-- Updates `resultBlobRef.current` with the new blob.
-- Revokes the old `resultUrl` and creates a new one.
-- Updates state so all downstream consumers (color previews, download) use the edited image.
+Add a new section between "Model Accuracy & Limitations" and "Free & Open Source" with a heading like **"Desktop vs. Mobile"** that explains:
 
-Also add undo support:
-- Maintain a `historyRef` (array of Blobs, capped at ~20 entries).
-- `updateResult` pushes the previous blob onto the history stack.
-- New `undoEdit()` function pops the last blob and restores it.
-- Expose `undoEdit` and `canUndo` (boolean) from the hook.
+- Background removal works on all devices.
+- The eraser brush tool for manual cleanup is available on desktop browsers only.
+- The custom color picker (eyedropper) depends on browser support and works best on desktop.
+- For the best editing experience, a desktop browser is recommended.
 
-#### 3. `src/components/PreviewSection.tsx` -- Integrate eraser UI
+#### 3. `CHANGELOG.md` -- Add entry
 
-- Add `eraserActive` boolean state and `brushSize` state (default 20, range 5-80).
-- Import `EraserCanvas` component.
-- When `eraserActive` is true and `status === "done"`, render `<EraserCanvas>` instead of the static `<img>` in the Result card.
-- Add a toolbar row between the Result cards and the color swatches containing:
-  - An "Eraser" toggle button (uses `Eraser` icon from lucide-react).
-  - A brush size slider (using the existing `Slider` component) -- only visible when eraser is active.
-  - An "Undo" button (uses `Undo2` icon) -- only visible when eraser is active and `canUndo` is true.
-- Accept `onUpdateResult`, `onUndo`, and `canUndo` as new props.
+Document the mobile UX improvement and About page update.
 
-#### 4. `src/pages/Index.tsx` -- Wire new props
+### Files to modify
 
-Pass `updateResult`, `undoEdit`, and `canUndo` from the hook to `PreviewSection`.
-
-#### 5. `CHANGELOG.md` -- Add entry
-
-Document the eraser brush feature.
-
-### Technical details
-
-- The eraser canvas uses `globalCompositeOperation = "destination-out"` with a round brush to punch transparent holes in the image. This is a standard Canvas 2D technique -- no extra libraries needed.
-- The canvas dimensions match the actual image dimensions. CSS scaling ensures it fits in the preview area (same `max-h-72` constraint as the current `<img>`).
-- Touch support uses `touchstart`/`touchmove`/`touchend` with `e.preventDefault()` to avoid scrolling while drawing.
-- History is stored as an array of Blobs (not data URLs) to minimize memory. Capped at 20 entries.
-- The `resultUrl` object URL is revoked and recreated on each edit to ensure React re-renders the color swatch thumbnails.
-
-### Files to create/modify
-
-| File | Action |
+| File | Change |
 |------|--------|
-| `src/components/EraserCanvas.tsx` | Create -- canvas component with eraser painting |
-| `src/hooks/useBackgroundRemoval.ts` | Modify -- add `updateResult`, undo history, `undoEdit`, `canUndo` |
-| `src/components/PreviewSection.tsx` | Modify -- add eraser toggle, brush slider, undo button, swap img/canvas |
-| `src/pages/Index.tsx` | Modify -- pass new props |
-| `CHANGELOG.md` | Modify -- add entry |
+| `src/components/PreviewSection.tsx` | Import `useIsMobile`, hide eraser on mobile, show hint text |
+| `src/pages/About.tsx` | Add "Desktop vs. Mobile" section |
+| `CHANGELOG.md` | Add entry |
