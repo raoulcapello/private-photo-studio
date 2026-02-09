@@ -14,7 +14,6 @@ interface PreviewSectionProps {
   errorLog: string | null;
   onDownload: () => void;
   onReset: () => void;
-  onSimulateError?: () => void;
 }
 
 export function PreviewSection({
@@ -26,7 +25,6 @@ export function PreviewSection({
   errorLog,
   onDownload,
   onReset,
-  onSimulateError,
 }: PreviewSectionProps) {
   const isProcessing = status === "loading-model" || status === "processing";
   const progressValue = status === "loading-model" ? 30 : status === "processing" ? 70 : 100;
@@ -137,11 +135,6 @@ export function PreviewSection({
           <RotateCcw className="h-4 w-4" />
           Try another photo
         </Button>
-        {status === "done" && onSimulateError && (
-          <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" onClick={onSimulateError}>
-            Test error report
-          </Button>
-        )}
       </div>
     </section>
   );
