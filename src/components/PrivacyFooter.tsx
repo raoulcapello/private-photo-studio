@@ -1,4 +1,4 @@
-import { Lock, Heart, Mail } from "lucide-react";
+import { Lock, Heart, Mail, Github, User } from "lucide-react";
 
 export function PrivacyFooter() {
   return (
@@ -50,6 +50,24 @@ export function PrivacyFooter() {
           >
             <Mail className="h-3.5 w-3.5" />
             Feedback welcome
+          </a>
+          <a
+            href="https://github.com/raoulcapello/private-photo-studio/tree/main"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 underline underline-offset-2 hover:text-foreground transition-colors"
+          >
+            <Github className="h-3.5 w-3.5" />
+            Source code
+          </a>
+          <a
+            href="https://www.raoulcapello.nl/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 underline underline-offset-2 hover:text-foreground transition-colors"
+          >
+            <User className="h-3.5 w-3.5" />
+            More about me
           </a>
         </div>
       </div>
