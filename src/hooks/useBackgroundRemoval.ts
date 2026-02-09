@@ -217,5 +217,30 @@ export function useBackgroundRemoval() {
     URL.revokeObjectURL(url);
   }, []);
 
-  return { ...state, processImage, reset, downloadResult };
+  const downloadWithBackground = useCallback(async (color: string | null) => {
+    if (!resultBlobRef.current) return;
+    if (!color) {
+      downloadResult();
+      return;
+    }
+    const img = await loadImageFromBlob(resultBlobRef.current);
+    const canvas = document.createElement("canvas");
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    const ctx = canvas.getContext("2d")!;
+    ctx.fillStyle = color;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0);
+    canvas.toBlob((blob) => {
+      if (!blob) return;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "background-removed.png";
+      a.click();
+      URL.revokeObjectURL(url);
+    }, "image/png");
+  }, [downloadResult]);
+
+  return { ...state, processImage, reset, downloadResult, downloadWithBackground };
 }

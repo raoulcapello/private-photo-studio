@@ -1,9 +1,16 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { Download, RotateCcw, Copy, ExternalLink, Check } from "lucide-react";
+import { Download, RotateCcw, Copy, ExternalLink, Check, Plus } from "lucide-react";
 import type { ProcessingStatus } from "@/hooks/useBackgroundRemoval";
+
+const PRESET_COLORS: { color: string | null; label: string }[] = [
+  { color: null, label: "Transparent" },
+  { color: "#FFFFFF", label: "White" },
+  { color: "#E5E7EB", label: "Gray" },
+  { color: "#1E3A5F", label: "Navy" },
+];
 
 interface PreviewSectionProps {
   originalUrl: string;
@@ -14,6 +21,7 @@ interface PreviewSectionProps {
   errorLog: string | null;
   onDownload: () => void;
   onReset: () => void;
+  downloadWithBackground: (color: string | null) => void;
 }
 
 export function PreviewSection({
@@ -25,10 +33,14 @@ export function PreviewSection({
   errorLog,
   onDownload,
   onReset,
+  downloadWithBackground,
 }: PreviewSectionProps) {
   const isProcessing = status === "loading-model" || status === "processing";
   const progressValue = status === "loading-model" ? 30 : status === "processing" ? 70 : 100;
   const [copied, setCopied] = useState(false);
+  const [selectedColor, setSelectedColor] = useState<string | null>(null);
+  const [customColor, setCustomColor] = useState<string | null>(null);
+  const colorInputRef = useRef<HTMLInputElement>(null);
 
   const handleCopy = async () => {
     if (!errorLog) return;
@@ -40,6 +52,12 @@ export function PreviewSection({
   const issueUrl = errorLog
     ? `https://github.com/raoulcapello/private-photo-studio/issues/new?title=${encodeURIComponent("Processing error: " + (error || "Unknown"))}&body=${encodeURIComponent(errorLog)}`
     : "#";
+
+  const resultBgStyle = selectedColor
+    ? { backgroundColor: selectedColor }
+    : undefined;
+
+  const resultBgClass = selectedColor ? "" : "checkerboard";
 
   return (
     <section className="flex flex-col items-center gap-8 px-4 pb-16">
@@ -66,7 +84,10 @@ export function PreviewSection({
             <div className="border-b px-4 py-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
               Result
             </div>
-            <div className="checkerboard flex items-center justify-center p-4 min-h-[280px]">
+            <div
+              className={`flex items-center justify-center p-4 min-h-[280px] ${resultBgClass}`}
+              style={resultBgStyle}
+            >
               {isProcessing && (
                 <div className="flex flex-col items-center gap-3 w-full px-4">
                   <Progress value={progressValue} className="w-full" />
@@ -123,10 +144,83 @@ export function PreviewSection({
         </Card>
       </div>
 
+      {/* Color variants */}
+      {status === "done" && resultUrl && (
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          {PRESET_COLORS.map(({ color, label }) => {
+            const isSelected = selectedColor === color;
+            return (
+              <button
+                key={label}
+                title={label}
+                onClick={() => setSelectedColor(color)}
+                className={`relative h-10 w-10 rounded-md border-2 overflow-hidden transition-all ${
+                  isSelected
+                    ? "border-primary ring-2 ring-primary/30 scale-110"
+                    : "border-border hover:border-primary/50"
+                }`}
+              >
+                <div
+                  className={`absolute inset-0 ${color ? "" : "checkerboard"}`}
+                  style={color ? { backgroundColor: color } : undefined}
+                />
+                <img
+                  src={resultUrl}
+                  alt={label}
+                  className="relative h-full w-full object-contain"
+                />
+              </button>
+            );
+          })}
+
+          {/* Custom color */}
+          {customColor && (
+            <button
+              title={`Custom (${customColor})`}
+              onClick={() => setSelectedColor(customColor)}
+              className={`relative h-10 w-10 rounded-md border-2 overflow-hidden transition-all ${
+                selectedColor === customColor
+                  ? "border-primary ring-2 ring-primary/30 scale-110"
+                  : "border-border hover:border-primary/50"
+              }`}
+            >
+              <div
+                className="absolute inset-0"
+                style={{ backgroundColor: customColor }}
+              />
+              <img
+                src={resultUrl}
+                alt="Custom color"
+                className="relative h-full w-full object-contain"
+              />
+            </button>
+          )}
+
+          <button
+            title="Custom color"
+            onClick={() => colorInputRef.current?.click()}
+            className="flex h-10 w-10 items-center justify-center rounded-md border-2 border-dashed border-border hover:border-primary/50 transition-colors"
+          >
+            <Plus className="h-4 w-4 text-muted-foreground" />
+            <input
+              ref={colorInputRef}
+              type="color"
+              className="sr-only"
+              value={customColor || "#FF5733"}
+              onChange={(e) => {
+                const c = e.target.value;
+                setCustomColor(c);
+                setSelectedColor(c);
+              }}
+            />
+          </button>
+        </div>
+      )}
+
       {/* Actions */}
       <div className="flex flex-wrap justify-center gap-3">
         {status === "done" && (
-          <Button size="lg" className="gap-2 px-8" onClick={onDownload}>
+          <Button size="lg" className="gap-2 px-8" onClick={() => downloadWithBackground(selectedColor)}>
             <Download className="h-4 w-4" />
             Download PNG
           </Button>
