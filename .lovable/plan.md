@@ -1,49 +1,33 @@
 
 
-## Extract Icon from OG Image for Logo and Favicon
+## Enlarge Nav Logo + Add Logo to Hero Section
 
-The OG image (`public/og-image.png`) contains a stylized camera icon. We'll use AI image generation to extract/recreate just the icon portion as a square image, then use it as both the nav bar logo and favicon.
+### Changes
 
-### Steps
-
-#### 1. Generate a square icon from the OG image
-Use the image editing tool to create a square (512x512) version of just the camera icon from the OG image, with a transparent or matching light background. This will be saved as `public/logo-icon.png`.
-
-#### 2. Generate a 32x32 favicon version
-Create a small favicon-sized version of the same icon, saved as `public/favicon.png` (replacing the existing one).
-
-#### 3. `src/components/Header.tsx` -- Replace inline SVG with image logo
-Replace the inline SVG camera icon with an `<img>` tag pointing to `/logo-icon.png`, sized to fit the nav bar.
+#### 1. `src/components/Header.tsx` -- Make nav logo bigger
+Increase the logo image size from `h-7 w-7` to `h-10 w-10` so it fills more of the 56px (h-14) nav bar without changing the header height or font size.
 
 ```tsx
-<NavLink to="/" className="flex items-center gap-2 text-lg font-semibold text-foreground hover:text-primary transition-colors">
-  <img src="/logo-icon.png" alt="" className="h-7 w-7 object-contain" aria-hidden="true" />
-  Private Photo Studio
-</NavLink>
+<img src="/logo-icon.png" alt="" className="h-10 w-10 object-contain" aria-hidden="true" />
 ```
 
-#### 4. `index.html` -- Update favicon to use new icon
-Replace the inline SVG favicon with the new PNG favicon:
+#### 2. `src/components/HeroSection.tsx` -- Add logo above/left of the hero title
+Add a larger version of the logo (e.g. `h-20 w-20`) positioned just above or inline-left of the H1 headline to reinforce branding on the landing page.
 
-```html
-<link rel="icon" type="image/png" href="/favicon.png" />
+```tsx
+<section className="flex flex-col items-center gap-8 px-4 pt-24 pb-16 text-center">
+  <img src="/logo-icon.png" alt="Private Photo Studio" className="h-20 w-20 object-contain" />
+  <h1 className="max-w-3xl text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl text-foreground">
+    Free AI Profile Picture{" "}
+    <span className="text-primary">Background Remover</span>
+  </h1>
+  ...
 ```
 
-Remove the inline SVG `<link>` since the PNG now matches the brand.
-
-#### 5. `src/components/Header.test.tsx` -- Update test
-Change the logo assertion from checking for an SVG to checking for an `<img>` element.
-
-### Files to create/modify
+### Files to modify
 
 | File | Change |
 |------|--------|
-| `public/logo-icon.png` | New -- square icon extracted from OG image |
-| `public/favicon.png` | Replace -- favicon version of the icon |
-| `src/components/Header.tsx` | Replace inline SVG with `<img>` tag |
-| `index.html` | Simplify to single PNG favicon link |
-| `src/components/Header.test.tsx` | Update logo assertion for `<img>` |
+| `src/components/Header.tsx` | Increase logo from `h-7 w-7` to `h-10 w-10` |
+| `src/components/HeroSection.tsx` | Add `h-20 w-20` logo image above the H1 |
 
-### Notes
-- The OG image (`public/og-image.png`) stays untouched for social sharing
-- The icon will be consistent across favicon, nav logo, and OG image
