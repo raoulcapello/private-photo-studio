@@ -19,6 +19,19 @@ interface BackgroundRemovalState {
  * real-world failures happen well below that due to GPU memory pressure.
  * 2048px preserves good quality while fitting comfortably in mobile GPU memory.
  */
+/**
+ * Load a Blob as an HTMLImageElement (more reliable than createImageBitmap on Android Chrome).
+ */
+function loadImageFromBlob(blob: Blob): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Failed to load image")); };
+    img.src = url;
+  });
+}
+
 async function resizeImageFile(file: File, maxDim = 2048): Promise<Blob> {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file);
@@ -149,8 +162,8 @@ export function useBackgroundRemoval() {
       const ctx = canvas.getContext("2d")!;
 
       // Draw the resized image
-      const imgBitmap = await createImageBitmap(resizedBlob);
-      ctx.drawImage(imgBitmap, 0, 0);
+      const imgEl = await loadImageFromBlob(resizedBlob);
+      ctx.drawImage(imgEl, 0, 0);
 
       // Get the mask as a RawImage and resize to match
       const mask = maskData.mask;
