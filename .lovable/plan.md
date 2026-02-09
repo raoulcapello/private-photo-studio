@@ -1,59 +1,27 @@
 
 
-## Add Tests for Essential Functionality
+## Fix Favicon: Remove Duplicate and Improve Contrast
 
-### Overview
-Add tests covering the core UI components, the key user flows, and the specific fixes documented in the changelog. Tests will use the existing Vitest + React Testing Library setup.
+### What Went Wrong
+There are two competing `<link rel="icon">` tags in `index.html` (line 6: inline SVG, line 7: PNG file). Browsers show the inline SVG, which uses teal (`#2a9d8f`) -- this blends into dark tab bars and the icon itself.
 
-### Test Files to Create
+### Fix
 
-#### 1. `src/components/HeroSection.test.tsx` -- Landing Page
-- Renders the headline, subtext, and CTA button
-- Renders all three privacy badges ("No uploads", "No tracking", "Runs locally")
-- File input triggers `onFileSelect` callback when a file is chosen
-- Use cases grid renders all three items
+#### `index.html`
+1. Remove the PNG favicon link (line 7) to eliminate the duplicate
+2. Update the inline SVG favicon to use **white (`#ffffff`)** stroke instead of teal, keeping the transparent background -- this gives strong contrast on both light and dark browser chrome
+3. The camera icon shape stays the same
 
-#### 2. `src/components/PreviewSection.test.tsx` -- Preview States
-- Shows "Original" card with the provided image
-- Shows progress bar and status message during `loading-model` state
-- Shows progress bar and status message during `processing` state
-- Shows result image and "Download PNG" button when `status === "done"`
-- Shows error message when `status === "error"`
-- Shows error log, "Copy error log" button, and "Report issue" link when error has `errorLog`
-- "Report issue" link contains a GitHub Issues URL with encoded error info
-- "Try another photo" button calls `onReset`
-- "Download PNG" button calls `onDownload`
+The single changed line will look like:
+```html
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z'/%3E%3Ccircle cx='12' cy='13' r='3'/%3E%3C/svg%3E" />
+```
 
-#### 3. `src/components/PrivacyFooter.test.tsx` -- Privacy Messaging
-- Renders the privacy statement text
-- Renders BRIA AI attribution link
-- Renders support/feedback/source/about links
+Note: White works well on dark tabs but may be invisible on light tabs. If you'd prefer a color that works on both (e.g., dark gray `#333` or keeping teal but bolder), let me know and I'll adjust.
 
-#### 4. `src/components/Header.test.tsx` -- Navigation
-- Renders app name "Private Photo Studio"
-- Renders "Editor" and "About" nav links
+### Files to modify
 
-#### 5. `src/hooks/useBackgroundRemoval.test.ts` -- Hook Logic (unit tests for pure functions)
-- Since the internal helpers (`isMobileDevice`, `buildErrorLog`, `resizeImageFile`, `loadImageFromBlob`) are not exported, we'll test them indirectly via the hook's behavior, or extract lightweight assertions where feasible.
-- Hook initializes with `status: "idle"` and null result/error
-- `reset()` returns state to idle
-- `downloadResult()` is a no-op when no result exists
-
-### Technical Details
-
-- All component tests wrap renders in `MemoryRouter` (needed for `NavLink` in Header)
-- `PreviewSection` tests cover every `ProcessingStatus` variant to ensure the correct UI is shown for each state
-- Error reporting tests verify the GitHub issue URL structure matches the pattern used in the component
-- No mocking of `@huggingface/transformers` needed -- we test the UI states, not the inference pipeline
-- Tests use `screen.getByText`, `getByRole`, `getByAlt` queries following Testing Library best practices
-
-### Files to create
-
-| File | What it tests |
-|------|---------------|
-| `src/components/HeroSection.test.tsx` | Landing page content, privacy badges, file selection |
-| `src/components/PreviewSection.test.tsx` | All processing states, error reporting UI, actions |
-| `src/components/PrivacyFooter.test.tsx` | Privacy copy, attribution, links |
-| `src/components/Header.test.tsx` | Navigation structure |
-| `src/hooks/useBackgroundRemoval.test.ts` | Hook initial state and reset behavior |
+| File | Change |
+|------|--------|
+| `index.html` | Remove duplicate PNG favicon link, change SVG stroke from `#2a9d8f` to `#ffffff` |
 
