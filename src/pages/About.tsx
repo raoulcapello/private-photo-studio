@@ -1,7 +1,7 @@
 import { Header } from "@/components/Header";
 import { PrivacyFooter } from "@/components/PrivacyFooter";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Briefcase, Users, Shield, Image } from "lucide-react";
+import { Briefcase, Users, Shield, Image, Code } from "lucide-react";
 
 /**
  * About Page
@@ -115,7 +115,7 @@ const About = () => {
           </section>
 
           {/* Why Privacy Matters */}
-          <section className="mb-8">
+          <section className="mb-16">
             <h2 className="text-2xl font-semibold text-foreground mb-4">
               Why Privacy Matters
             </h2>
@@ -125,6 +125,46 @@ const About = () => {
               or used for training AI models. Private Photo Studio keeps everything on your device—your 
               photos never leave your browser.
             </p>
+          </section>
+
+          {/* Free & Open Source */}
+          <section className="mb-8">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <Code className="h-5 w-5 text-primary" />
+              </div>
+              <h2 className="text-2xl font-semibold text-foreground">
+                Free & Open Source
+              </h2>
+            </div>
+            <p className="text-muted-foreground leading-relaxed mb-4">
+              This project is Free and Open Source Software (FOSS), released under the MIT license. 
+              You're welcome to view the source code, learn from it, and contribute improvements.
+            </p>
+            <ul className="text-muted-foreground space-y-2 mb-4">
+              <li>• Free to use for personal and non-commercial purposes</li>
+              <li>• Source code available on GitHub</li>
+              <li>• Contributions and feedback welcome</li>
+              <li>• Commercial use requires permission</li>
+            </ul>
+            <div className="flex flex-wrap gap-4 text-sm">
+              <a 
+                href="https://github.com/raoulcapello/private-photo-studio/blob/main/LICENSE" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-primary hover:underline"
+              >
+                View License →
+              </a>
+              <a 
+                href="https://github.com/raoulcapello/private-photo-studio" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-primary hover:underline"
+              >
+                GitHub Repository →
+              </a>
+            </div>
           </section>
 
         </div>
