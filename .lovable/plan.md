@@ -1,84 +1,72 @@
 
-# Developer Documentation Plan for pfppg
+## Update PrivacyFooter to Include Contribution, Disclaimer, Donation, and Feedback Info
 
-## File to Create
-Create a new file: `DEVELOPER.md` in the project root
+### Current State
+The footer currently only displays a privacy promise. It's a simple, centered card with a lock icon and brief explanation.
 
-## Content Structure
+### Proposed Changes
+Expand the `PrivacyFooter` component to include four new sections while maintaining the minimal, calm design:
 
-### 1. **Verifying Browser-Only Processing**
-This section will help developers confirm that images never leave the browser:
+1. **Privacy Section** (existing)
+   - Keep the lock icon and privacy message as-is
 
-- **Network Inspection Method**
-  - Open DevTools → Network tab
-  - Load an image and process it
-  - Show that the ONLY external requests are:
-    - Model config files from `huggingface.co` (not image data)
-    - WASM runtime files from `cdn.jsdelivr.net` (for fallback)
-    - NO image data is ever sent to any server
-  - Explain what requests ARE expected (model artifacts) vs. what should NEVER happen (image uploads)
+2. **Model Attribution Section**
+   - Add a small text note crediting BRIA AI
+   - Include a link to https://huggingface.co/briaai
+   - Use a subtle link style to maintain visual calm
 
-- **Code Review Approach**
-  - Point to `src/hooks/useBackgroundRemoval.ts` lines 46-48 where the image is converted to a local blob URL
-  - Highlight lines 58-80 where processing happens entirely on canvas (browser's `CanvasRenderingContext2D`)
-  - Note line 83-85 where result is exported as a local blob, never sent anywhere
-  - Explain that `createImageBitmap` and canvas operations are all browser APIs
+3. **Disclaimer Section**
+   - Add a warning about model limitations
+   - Message: "The model may not handle all pictures equally well—try different pictures and see what works best"
+   - Use a smaller, muted text style to avoid alarming users
 
-- **Browser API Evidence**
-  - Show that `URL.createObjectURL()` creates local, in-memory references
-  - Explain `canvas.toBlob()` generates data entirely in the browser
-  - Mention that the model (`@huggingface/transformers`) runs via WebGPU or WASM (both client-side runtimes)
+4. **Support & Feedback Section**
+   - Donation link: "Support development: https://liberapay.com/raoul/donate"
+   - Feedback email: "Feedback welcome at: raoulcapello@proton.me"
+   - Make these appear as subtle links/text
 
-### 2. **Running Locally**
-Step-by-step guide for developers:
+### Design Approach
+- Keep the existing centered, vertical layout
+- Use consistent spacing (gap-3 or gap-4) between sections
+- Maintain `text-sm` and `text-muted-foreground` for consistency with privacy message
+- Use `lucide-react` icons where helpful:
+  - `Gift` or `Heart` for donation
+  - `Mail` for feedback email
+  - Keep these icons subtle and smaller (h-4 w-4)
+- Separate sections with visual breathing room (dividers or just whitespace)
+- Ensure all links are proper `<a>` tags with `rel="noopener noreferrer"` for security
 
-- **Prerequisites**
-  - Node.js 16+ (recommend checking with `node --version`)
-  - npm or bun (project uses bun.lockb)
+### Structure in Code
+```
+<footer>
+  <div className="container">
+    <!-- Privacy section (existing) -->
+    <div>
+      <Lock icon + privacy text>
+    </div>
+    
+    <!-- Divider or spacing -->
+    
+    <!-- Model section -->
+    <div>
+      Model by BRIA AI | Link
+    </div>
+    
+    <!-- Disclaimer section -->
+    <div>
+      Warning icon + disclaimer text
+    </div>
+    
+    <!-- Support section -->
+    <div>
+      Donation link + Feedback link
+    </div>
+  </div>
+</footer>
+```
 
-- **Installation Steps**
-  - Clone the repository
-  - Navigate to project directory
-  - `npm install` or `bun install`
-  - Explains what gets installed (React, Vite, @huggingface/transformers, Tailwind, shadcn-ui)
-
-- **Running Dev Server**
-  - `npm run dev` or `bun run dev`
-  - Server starts on `http://localhost:8080`
-  - Hot module replacement enabled (changes reflect instantly)
-  - Explains the HMR overlay is disabled in config for better UX
-
-- **Building for Production**
-  - `npm run build` or `bun run build`
-  - Output in `dist/` directory
-  - Explains that vite optimizes the build (code splitting, minification)
-  - Can be served as static files anywhere
-
-- **Testing**
-  - `npm run test` or `bun run test`
-  - `npm run test:watch` for watch mode
-  - Uses Vitest
-
-### 3. **Key Files to Understand**
-Brief guide to architecture:
-
-- `src/hooks/useBackgroundRemoval.ts` - Core business logic
-- `src/pages/Index.tsx` - Main orchestration
-- `src/components/` - UI components (Hero, Preview, Footer)
-- `vite.config.ts` - Build and dev server configuration
-
-### 4. **Technical Decisions Explained**
-Address common "why" questions:
-
-- Why WebGPU first, then WASM fallback? (Performance + compatibility)
-- Why canvas compositing? (Proper alpha channel handling for transparent PNG)
-- Why local blob URLs? (Memory efficient, no server round-trip)
-- Why RMBG-1.4? (Accurate, lightweight, open-source)
-
-## Tone & Approach
-- Written for developers (not beginners, but not assuming expert knowledge of these specific tools)
-- Use practical verification steps (network tab inspection)
-- Provide code line references
-- Explain "why" behind technical choices
-- Include troubleshooting tips (e.g., if WebGPU not available, WASM fallback handles it)
-
+### Implementation Details
+- Add icons: Import `Gift`, `Mail`, and optionally `AlertCircle` from lucide-react
+- All links open in new tabs (`target="_blank"`)
+- Maintain mobile responsiveness with the existing max-w-2xl container
+- Use consistent color variables (text-primary, text-muted-foreground) to align with design system
