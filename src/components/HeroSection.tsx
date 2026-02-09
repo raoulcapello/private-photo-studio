@@ -49,12 +49,14 @@ export function HeroSection({ onFileSelect }: HeroSectionProps) {
 
   return (
     <section className="flex flex-col items-center gap-8 px-4 pt-24 pb-16 text-center">
-      <img src="/logo-icon.png" alt="Private Photo Studio" className="h-60 w-60 object-contain" />
-      {/* SEO: H1 with primary keyword - AI profile picture background remover */}
-      <h1 className="max-w-3xl text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl text-foreground">
-        Free AI Profile Picture{" "}
-        <span className="text-primary">Background Remover</span>
-      </h1>
+      <div className="flex items-center gap-6">
+        <img src="/logo-icon.png" alt="Private Photo Studio" className="h-44 w-44 object-contain shrink-0" />
+        {/* SEO: H1 with primary keyword - AI profile picture background remover */}
+        <h1 className="max-w-3xl text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl text-foreground text-left">
+          Free AI Profile Picture{" "}
+          <span className="text-primary">Background Remover</span>
+        </h1>
+      </div>
 
       {/* SEO: Tagline with LinkedIn, CVs, social media keywords */}
       <p className="max-w-lg text-lg text-muted-foreground">
