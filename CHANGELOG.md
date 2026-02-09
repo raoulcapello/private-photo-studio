@@ -2,6 +2,16 @@
 
 ## 2026-02-09
 
+### Improved: Mobile experience and platform guidance
+
+- Eraser brush tool is now hidden on mobile devices to avoid poor touch UX.
+- Mobile users see a short hint suggesting desktop for advanced editing.
+- Added a "Desktop vs. Mobile" section to the About page explaining feature availability.
+
+## 2026-02-09
+
+## 2026-02-09
+
 ### Added: Eraser brush for artifact cleanup
 
 - New eraser tool lets users paint over leftover background artifacts to make them transparent.
