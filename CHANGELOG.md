@@ -2,6 +2,12 @@
 
 ## 2026-02-09
 
+### Fixed: Intermittent "Source image could not be decoded" on Android Chrome
+
+**Problem:** `createImageBitmap()` intermittently fails on Android Chrome during compositing, even after the image has been successfully downscaled and processed.
+
+**Solution:** Replaced `createImageBitmap` with an `<img>` element approach (`loadImageFromBlob` helper), consistent with how `resizeImageFile` already works. This avoids the flaky `createImageBitmap` path entirely.
+
 ### Changed: WASM by default on mobile, error reporting
 
 **Problem:** Chrome on Android consistently fails with WebGPU even after image downscaling. Firefox (WASM) works fine.
