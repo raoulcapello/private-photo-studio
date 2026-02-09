@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
@@ -43,6 +44,7 @@ export function PreviewSection({
   onUndo,
   canUndo,
 }: PreviewSectionProps) {
+  const isMobile = useIsMobile();
   const isProcessing = status === "loading-model" || status === "processing";
   const progressValue = status === "loading-model" ? 30 : status === "processing" ? 70 : 100;
   const [copied, setCopied] = useState(false);
@@ -162,8 +164,8 @@ export function PreviewSection({
         </Card>
       </div>
 
-      {/* Eraser toolbar */}
-      {status === "done" && resultUrl && (
+      {/* Eraser toolbar - desktop only */}
+      {status === "done" && resultUrl && !isMobile && (
         <div className="flex flex-wrap items-center justify-center gap-3">
           <Button
             variant={eraserActive ? "default" : "outline"}
@@ -196,6 +198,13 @@ export function PreviewSection({
             </>
           )}
         </div>
+      )}
+
+      {/* Mobile hint */}
+      {status === "done" && resultUrl && isMobile && (
+        <p className="text-xs text-muted-foreground text-center max-w-sm">
+          For advanced editing tools like the eraser brush, try using a desktop browser.
+        </p>
       )}
 
       {/* Color variants */}
