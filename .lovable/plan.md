@@ -1,44 +1,49 @@
 
 
-## Add Camera Logo to Header + Fix Favicon PNG Fallback
+## Extract Icon from OG Image for Logo and Favicon
 
-### Changes
+The OG image (`public/og-image.png`) contains a stylized camera icon. We'll use AI image generation to extract/recreate just the icon portion as a square image, then use it as both the nav bar logo and favicon.
 
-#### 1. `src/components/Header.tsx` -- Add inline SVG camera icon as logo
-Add the same camera SVG icon (used in the favicon) next to the "Private Photo Studio" text in the nav header, using `currentColor` for the stroke so it inherits the text color and works with theming.
+### Steps
 
-#### 2. `index.html` -- Re-add PNG favicon as fallback
-Add back the PNG fallback link that was removed in the last edit:
-```html
-<link rel="icon" type="image/png" href="/favicon.png" />
-```
+#### 1. Generate a square icon from the OG image
+Use the image editing tool to create a square (512x512) version of just the camera icon from the OG image, with a transparent or matching light background. This will be saved as `public/logo-icon.png`.
 
-#### 3. `public/favicon.png` -- Update background to transparent
-Since the current `favicon.png` likely has a teal background, we'll generate a new one with a transparent background and white camera icon (matching the SVG favicon). This will be a simple 32x32 PNG.
+#### 2. Generate a 32x32 favicon version
+Create a small favicon-sized version of the same icon, saved as `public/favicon.png` (replacing the existing one).
 
-**Note:** Since we can't inspect the binary PNG, we'll replace it with an SVG-based approach: add a second `<link>` for the SVG as the primary icon and keep the PNG as a legacy fallback. If you want the PNG itself updated, you'd need to provide a new image file or I can create one programmatically using a canvas-based approach in a small build script -- but the simplest fix is to just rely on the SVG (which all modern browsers support) and accept the PNG as-is for older browsers.
+#### 3. `src/components/Header.tsx` -- Replace inline SVG with image logo
+Replace the inline SVG camera icon with an `<img>` tag pointing to `/logo-icon.png`, sized to fit the nav bar.
 
-#### 4. `src/components/Header.test.tsx` -- Update test
-Add assertion for the logo SVG element in the header.
-
-### Technical Details
-
-**Header logo markup:**
 ```tsx
 <NavLink to="/" className="flex items-center gap-2 text-lg font-semibold text-foreground hover:text-primary transition-colors">
-  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
-    <circle cx="12" cy="13" r="3"/>
-  </svg>
+  <img src="/logo-icon.png" alt="" className="h-7 w-7 object-contain" aria-hidden="true" />
   Private Photo Studio
 </NavLink>
 ```
 
-### Files to modify
+#### 4. `index.html` -- Update favicon to use new icon
+Replace the inline SVG favicon with the new PNG favicon:
+
+```html
+<link rel="icon" type="image/png" href="/favicon.png" />
+```
+
+Remove the inline SVG `<link>` since the PNG now matches the brand.
+
+#### 5. `src/components/Header.test.tsx` -- Update test
+Change the logo assertion from checking for an SVG to checking for an `<img>` element.
+
+### Files to create/modify
 
 | File | Change |
 |------|--------|
-| `src/components/Header.tsx` | Add inline camera SVG next to app name |
-| `src/components/Header.test.tsx` | Update test for new logo markup |
-| `index.html` | Re-add PNG favicon fallback link |
+| `public/logo-icon.png` | New -- square icon extracted from OG image |
+| `public/favicon.png` | Replace -- favicon version of the icon |
+| `src/components/Header.tsx` | Replace inline SVG with `<img>` tag |
+| `index.html` | Simplify to single PNG favicon link |
+| `src/components/Header.test.tsx` | Update logo assertion for `<img>` |
 
+### Notes
+- The OG image (`public/og-image.png`) stays untouched for social sharing
+- The icon will be consistent across favicon, nav logo, and OG image
