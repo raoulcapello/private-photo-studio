@@ -7,6 +7,7 @@ interface BackgroundRemovalState {
   statusMessage: string;
   resultUrl: string | null;
   error: string | null;
+  errorLog: string | null;
 }
 
 /**
@@ -50,64 +51,88 @@ async function resizeImageFile(file: File, maxDim = 2048): Promise<Blob> {
   });
 }
 
+/**
+ * Detect if the current device is mobile.
+ * Uses a combination of user agent and screen size heuristics.
+ */
+function isMobileDevice(): boolean {
+  const ua = navigator.userAgent;
+  if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua)) {
+    return true;
+  }
+  // Fallback: small screen likely means mobile
+  if (window.screen.width <= 768 || window.screen.height <= 768) {
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Build a structured error report for diagnostics and bug filing.
+ */
+function buildErrorLog(
+  device: "webgpu" | "wasm",
+  file: File,
+  err: any,
+): string {
+  const lines = [
+    "--- Private Photo Studio Error Report ---",
+    `Time: ${new Date().toISOString()}`,
+    `Browser: ${navigator.userAgent}`,
+    `Screen: ${window.screen.width}x${window.screen.height}`,
+    `Device: ${device}`,
+    `Mobile detected: ${isMobileDevice()}`,
+    `Image: ${file.name} (${(file.size / 1024 / 1024).toFixed(1)} MB, ${file.type})`,
+    `Error: ${err?.message || String(err)}`,
+    `Stack: ${err?.stack || "N/A"}`,
+  ];
+  return lines.join("\n");
+}
+
 export function useBackgroundRemoval() {
   const [state, setState] = useState<BackgroundRemovalState>({
     status: "idle",
     statusMessage: "",
     resultUrl: null,
     error: null,
+    errorLog: null,
   });
   const resultBlobRef = useRef<Blob | null>(null);
 
   const processImage = useCallback(async (file: File) => {
-    setState({ status: "loading-model", statusMessage: "Loading model…", resultUrl: null, error: null });
+    setState({ status: "loading-model", statusMessage: "Loading model…", resultUrl: null, error: null, errorLog: null });
+
+    // Choose backend: WASM on mobile (more reliable), WebGPU on desktop
+    const mobile = isMobileDevice();
+    let device: "webgpu" | "wasm" = "wasm";
+
+    if (!mobile && "gpu" in navigator) {
+      try {
+        const adapter = await (navigator as any).gpu.requestAdapter();
+        if (adapter) device = "webgpu";
+      } catch {
+        // fall back to wasm
+      }
+    }
+
+    const reason = mobile ? "mobile device detected" : device === "webgpu" ? "desktop with WebGPU" : "WebGPU unavailable";
 
     try {
       const { pipeline, RawImage } = await import("@huggingface/transformers");
 
-      // Pre-process: downscale large images to stay within mobile GPU limits
+      // Pre-process: downscale large images to stay within GPU limits
       const resizedBlob = await resizeImageFile(file);
 
-      // Check WebGPU support
-      let device: "webgpu" | "wasm" = "wasm";
-      if ("gpu" in navigator) {
-        try {
-          const adapter = await (navigator as any).gpu.requestAdapter();
-          if (adapter) device = "webgpu";
-        } catch {
-          // fall back to wasm
-        }
-      }
+      setState((s) => ({ ...s, statusMessage: `Loading model (${device}, ${reason})…` }));
 
-      setState((s) => ({ ...s, statusMessage: `Loading model (${device})…` }));
-
-      let segmenter: any = await pipeline("image-segmentation", "briaai/RMBG-1.4", {
+      const segmenter = await pipeline("image-segmentation", "briaai/RMBG-1.4", {
         device,
       });
 
       setState((s) => ({ ...s, status: "processing", statusMessage: "Removing background…" }));
 
       const imageUrl = URL.createObjectURL(resizedBlob);
-      let result: any;
-
-      // Run inference with WebGPU→WASM fallback
-      try {
-        result = await segmenter(imageUrl);
-      } catch (inferenceError) {
-        if (device === "webgpu") {
-          console.warn("WebGPU inference failed, retrying with WASM:", inferenceError);
-          setState((s) => ({ ...s, statusMessage: "WebGPU failed, retrying with CPU…" }));
-          // Dispose previous pipeline and retry with WASM
-          await segmenter.dispose();
-          segmenter = await pipeline("image-segmentation", "briaai/RMBG-1.4", {
-            device: "wasm",
-          });
-          result = await segmenter(imageUrl);
-        } else {
-          throw inferenceError;
-        }
-      }
-
+      const result = await segmenter(imageUrl);
       URL.revokeObjectURL(imageUrl);
 
       // result is an array with mask data — get the first result
@@ -149,14 +174,16 @@ export function useBackgroundRemoval() {
       resultBlobRef.current = blob;
       const resultUrlNew = URL.createObjectURL(blob);
 
-      setState({ status: "done", statusMessage: "Done!", resultUrl: resultUrlNew, error: null });
+      setState({ status: "done", statusMessage: "Done!", resultUrl: resultUrlNew, error: null, errorLog: null });
     } catch (err: any) {
       console.error("Background removal failed:", err);
+      const errorLog = buildErrorLog(device, file, err);
       setState({
         status: "error",
         statusMessage: "",
         resultUrl: null,
         error: err?.message || "Something went wrong. Please try again.",
+        errorLog,
       });
     }
   }, []);
@@ -164,7 +191,7 @@ export function useBackgroundRemoval() {
   const reset = useCallback(() => {
     if (state.resultUrl) URL.revokeObjectURL(state.resultUrl);
     resultBlobRef.current = null;
-    setState({ status: "idle", statusMessage: "", resultUrl: null, error: null });
+    setState({ status: "idle", statusMessage: "", resultUrl: null, error: null, errorLog: null });
   }, [state.resultUrl]);
 
   const downloadResult = useCallback(() => {
