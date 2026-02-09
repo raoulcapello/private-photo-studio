@@ -111,6 +111,8 @@ export function useBackgroundRemoval() {
     errorLog: null,
   });
   const resultBlobRef = useRef<Blob | null>(null);
+  const historyRef = useRef<Blob[]>([]);
+  const [canUndo, setCanUndo] = useState(false);
 
   const processImage = useCallback(async (file: File) => {
     setState({ status: "loading-model", statusMessage: "Loading model…", resultUrl: null, error: null, errorLog: null });
@@ -201,9 +203,33 @@ export function useBackgroundRemoval() {
     }
   }, []);
 
+  const updateResult = useCallback((blob: Blob) => {
+    // Push current blob to history before replacing
+    if (resultBlobRef.current) {
+      historyRef.current = [...historyRef.current.slice(-19), resultBlobRef.current];
+      setCanUndo(true);
+    }
+    resultBlobRef.current = blob;
+    if (state.resultUrl) URL.revokeObjectURL(state.resultUrl);
+    const newUrl = URL.createObjectURL(blob);
+    setState((s) => ({ ...s, resultUrl: newUrl }));
+  }, [state.resultUrl]);
+
+  const undoEdit = useCallback(() => {
+    if (historyRef.current.length === 0) return;
+    const prev = historyRef.current.pop()!;
+    setCanUndo(historyRef.current.length > 0);
+    resultBlobRef.current = prev;
+    if (state.resultUrl) URL.revokeObjectURL(state.resultUrl);
+    const newUrl = URL.createObjectURL(prev);
+    setState((s) => ({ ...s, resultUrl: newUrl }));
+  }, [state.resultUrl]);
+
   const reset = useCallback(() => {
     if (state.resultUrl) URL.revokeObjectURL(state.resultUrl);
     resultBlobRef.current = null;
+    historyRef.current = [];
+    setCanUndo(false);
     setState({ status: "idle", statusMessage: "", resultUrl: null, error: null, errorLog: null });
   }, [state.resultUrl]);
 
@@ -242,5 +268,5 @@ export function useBackgroundRemoval() {
     }, "image/png");
   }, [downloadResult]);
 
-  return { ...state, processImage, reset, downloadResult, downloadWithBackground };
+  return { ...state, processImage, reset, downloadResult, downloadWithBackground, updateResult, undoEdit, canUndo };
 }

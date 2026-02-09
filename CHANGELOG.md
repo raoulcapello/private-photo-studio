@@ -2,6 +2,16 @@
 
 ## 2026-02-09
 
+### Added: Eraser brush for artifact cleanup
+
+- New eraser tool lets users paint over leftover background artifacts to make them transparent.
+- Adjustable brush size slider (5–80px).
+- Undo support to revert the last stroke (up to 20 steps).
+- Eraser edits update the result blob, so color previews and downloads reflect the cleaned-up image.
+- Works on both desktop (mouse) and mobile (touch).
+
+## 2026-02-09
+
 ### Added: Background color picker and preset variants
 
 - Result view now shows 4 variant thumbnails: Transparent, White, Gray, and Navy.
