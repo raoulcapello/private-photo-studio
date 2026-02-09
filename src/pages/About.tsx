@@ -1,7 +1,7 @@
 import { Header } from "@/components/Header";
 import { PrivacyFooter } from "@/components/PrivacyFooter";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Briefcase, Users, Shield, Image, Code } from "lucide-react";
+import { Briefcase, Users, Shield, Image, Code, AlertCircle } from "lucide-react";
 
 /**
  * About Page
@@ -116,14 +116,39 @@ const About = () => {
 
           {/* Why Privacy Matters */}
           <section className="mb-16">
-            <h2 className="text-2xl font-semibold text-foreground mb-4">
-              Why Privacy Matters
-            </h2>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <Shield className="h-5 w-5 text-primary" />
+              </div>
+              <h2 className="text-2xl font-semibold text-foreground">
+                Why Privacy Matters
+              </h2>
+            </div>
             <p className="text-muted-foreground leading-relaxed">
               Your profile photos are personal. They contain your face, your identity. Other background 
               removal tools upload your images to remote servers, where they could be stored, analyzed, 
               or used for training AI models. Private Photo Studio keeps everything on your device—your 
               photos never leave your browser.
+            </p>
+          </section>
+
+          {/* Model Accuracy & Limitations */}
+          <section className="mb-16">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <AlertCircle className="h-5 w-5 text-primary" />
+              </div>
+              <h2 className="text-2xl font-semibold text-foreground">
+                Model Accuracy & Limitations
+              </h2>
+            </div>
+            <p className="text-muted-foreground leading-relaxed mb-4">
+              The model may not handle all pictures equally well—try different pictures and see what 
+              works best.
+            </p>
+            <p className="text-muted-foreground leading-relaxed">
+              Results depend on factors like lighting, contrast between subject and background, and 
+              image clarity. Photos with clear edges and good lighting typically produce the best results.
             </p>
           </section>
 

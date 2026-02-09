@@ -27,11 +27,6 @@ export function PrivacyFooter() {
           </a>
         </p>
 
-        {/* Disclaimer */}
-        <p className="text-xs text-muted-foreground/80 max-w-md">
-          The model may not handle all pictures equally well—try different
-          pictures and see what works best.
-        </p>
 
         {/* Support & Feedback */}
         <div className="flex flex-wrap items-center justify-center gap-4 text-xs text-muted-foreground">
@@ -45,7 +40,9 @@ export function PrivacyFooter() {
             Support development
           </a>
           <a
-            href="mailto:raoulcapello@proton.me"
+            href="https://github.com/raoulcapello/private-photo-studio/issues"
+            target="_blank"
+            rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 underline underline-offset-2 hover:text-foreground transition-colors"
           >
             <Mail className="h-3.5 w-3.5" />
@@ -67,7 +64,7 @@ export function PrivacyFooter() {
             className="inline-flex items-center gap-1.5 underline underline-offset-2 hover:text-foreground transition-colors"
           >
             <User className="h-3.5 w-3.5" />
-            More about me
+            About the developer
           </a>
         </div>
       </div>
