@@ -12,6 +12,9 @@ const baseProps = {
   onDownload: vi.fn(),
   onReset: vi.fn(),
   downloadWithBackground: vi.fn(),
+  onUpdateResult: vi.fn(),
+  onUndo: vi.fn(),
+  canUndo: false,
 };
 
 describe("PreviewSection", () => {

@@ -7,7 +7,7 @@ import { useBackgroundRemoval } from "@/hooks/useBackgroundRemoval";
 
 const Index = () => {
   const [originalUrl, setOriginalUrl] = useState<string | null>(null);
-  const { status, statusMessage, resultUrl, error, errorLog, processImage, reset, downloadResult, downloadWithBackground } =
+  const { status, statusMessage, resultUrl, error, errorLog, processImage, reset, downloadResult, downloadWithBackground, updateResult, undoEdit, canUndo } =
     useBackgroundRemoval();
 
   const handleFileSelect = useCallback(
@@ -43,6 +43,9 @@ const Index = () => {
               onDownload={downloadResult}
               onReset={handleReset}
               downloadWithBackground={downloadWithBackground}
+              onUpdateResult={updateResult}
+              onUndo={undoEdit}
+              canUndo={canUndo}
             />
           </div>
         )}

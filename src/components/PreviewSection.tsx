@@ -2,7 +2,9 @@ import { useState, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { Download, RotateCcw, Copy, ExternalLink, Check, Plus } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
+import { Download, RotateCcw, Copy, ExternalLink, Check, Plus, Eraser, Undo2 } from "lucide-react";
+import { EraserCanvas } from "@/components/EraserCanvas";
 import type { ProcessingStatus } from "@/hooks/useBackgroundRemoval";
 
 const PRESET_COLORS: { color: string | null; label: string }[] = [
@@ -22,6 +24,9 @@ interface PreviewSectionProps {
   onDownload: () => void;
   onReset: () => void;
   downloadWithBackground: (color: string | null) => void;
+  onUpdateResult: (blob: Blob) => void;
+  onUndo: () => void;
+  canUndo: boolean;
 }
 
 export function PreviewSection({
@@ -34,12 +39,17 @@ export function PreviewSection({
   onDownload,
   onReset,
   downloadWithBackground,
+  onUpdateResult,
+  onUndo,
+  canUndo,
 }: PreviewSectionProps) {
   const isProcessing = status === "loading-model" || status === "processing";
   const progressValue = status === "loading-model" ? 30 : status === "processing" ? 70 : 100;
   const [copied, setCopied] = useState(false);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [customColor, setCustomColor] = useState<string | null>(null);
+  const [eraserActive, setEraserActive] = useState(false);
+  const [brushSize, setBrushSize] = useState(20);
   const colorInputRef = useRef<HTMLInputElement>(null);
 
   const handleCopy = async () => {
@@ -96,11 +106,19 @@ export function PreviewSection({
                   </p>
                 </div>
               )}
-              {status === "done" && resultUrl && (
+              {status === "done" && resultUrl && !eraserActive && (
                 <img
                   src={resultUrl}
                   alt="Background removed"
                   className="max-h-72 w-auto rounded-md object-contain"
+                />
+              )}
+              {status === "done" && resultUrl && eraserActive && (
+                <EraserCanvas
+                  imageUrl={resultUrl}
+                  brushSize={brushSize}
+                  backgroundColor={selectedColor}
+                  onEdit={onUpdateResult}
                 />
               )}
               {status === "error" && (
@@ -143,6 +161,42 @@ export function PreviewSection({
           </CardContent>
         </Card>
       </div>
+
+      {/* Eraser toolbar */}
+      {status === "done" && resultUrl && (
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          <Button
+            variant={eraserActive ? "default" : "outline"}
+            size="sm"
+            className="gap-1.5"
+            onClick={() => setEraserActive((v) => !v)}
+          >
+            <Eraser className="h-4 w-4" />
+            Eraser
+          </Button>
+          {eraserActive && (
+            <>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">Size:</span>
+                <Slider
+                  value={[brushSize]}
+                  onValueChange={([v]) => setBrushSize(v)}
+                  min={5}
+                  max={80}
+                  step={1}
+                  className="w-28"
+                />
+              </div>
+              {canUndo && (
+                <Button variant="outline" size="sm" className="gap-1.5" onClick={onUndo}>
+                  <Undo2 className="h-4 w-4" />
+                  Undo
+                </Button>
+              )}
+            </>
+          )}
+        </div>
+      )}
 
       {/* Color variants */}
       {status === "done" && resultUrl && (
