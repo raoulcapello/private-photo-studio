@@ -1,27 +1,44 @@
 
 
-## Fix Favicon: Remove Duplicate and Improve Contrast
+## Add Camera Logo to Header + Fix Favicon PNG Fallback
 
-### What Went Wrong
-There are two competing `<link rel="icon">` tags in `index.html` (line 6: inline SVG, line 7: PNG file). Browsers show the inline SVG, which uses teal (`#2a9d8f`) -- this blends into dark tab bars and the icon itself.
+### Changes
 
-### Fix
+#### 1. `src/components/Header.tsx` -- Add inline SVG camera icon as logo
+Add the same camera SVG icon (used in the favicon) next to the "Private Photo Studio" text in the nav header, using `currentColor` for the stroke so it inherits the text color and works with theming.
 
-#### `index.html`
-1. Remove the PNG favicon link (line 7) to eliminate the duplicate
-2. Update the inline SVG favicon to use **white (`#ffffff`)** stroke instead of teal, keeping the transparent background -- this gives strong contrast on both light and dark browser chrome
-3. The camera icon shape stays the same
-
-The single changed line will look like:
+#### 2. `index.html` -- Re-add PNG favicon as fallback
+Add back the PNG fallback link that was removed in the last edit:
 ```html
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z'/%3E%3Ccircle cx='12' cy='13' r='3'/%3E%3C/svg%3E" />
+<link rel="icon" type="image/png" href="/favicon.png" />
 ```
 
-Note: White works well on dark tabs but may be invisible on light tabs. If you'd prefer a color that works on both (e.g., dark gray `#333` or keeping teal but bolder), let me know and I'll adjust.
+#### 3. `public/favicon.png` -- Update background to transparent
+Since the current `favicon.png` likely has a teal background, we'll generate a new one with a transparent background and white camera icon (matching the SVG favicon). This will be a simple 32x32 PNG.
+
+**Note:** Since we can't inspect the binary PNG, we'll replace it with an SVG-based approach: add a second `<link>` for the SVG as the primary icon and keep the PNG as a legacy fallback. If you want the PNG itself updated, you'd need to provide a new image file or I can create one programmatically using a canvas-based approach in a small build script -- but the simplest fix is to just rely on the SVG (which all modern browsers support) and accept the PNG as-is for older browsers.
+
+#### 4. `src/components/Header.test.tsx` -- Update test
+Add assertion for the logo SVG element in the header.
+
+### Technical Details
+
+**Header logo markup:**
+```tsx
+<NavLink to="/" className="flex items-center gap-2 text-lg font-semibold text-foreground hover:text-primary transition-colors">
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
+    <circle cx="12" cy="13" r="3"/>
+  </svg>
+  Private Photo Studio
+</NavLink>
+```
 
 ### Files to modify
 
 | File | Change |
 |------|--------|
-| `index.html` | Remove duplicate PNG favicon link, change SVG stroke from `#2a9d8f` to `#ffffff` |
+| `src/components/Header.tsx` | Add inline camera SVG next to app name |
+| `src/components/Header.test.tsx` | Update test for new logo markup |
+| `index.html` | Re-add PNG favicon fallback link |
 
