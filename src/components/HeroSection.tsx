@@ -49,10 +49,10 @@ export function HeroSection({ onFileSelect }: HeroSectionProps) {
 
   return (
     <section className="flex flex-col items-center gap-8 px-4 pt-24 pb-16 text-center">
-      <div className="flex items-center gap-6">
-        <img src="/logo-icon.png" alt="Private Photo Studio" className="h-44 w-44 object-contain shrink-0" />
+      <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
+        <img src="/logo-icon.png" alt="Private Photo Studio" className="h-32 w-32 sm:h-44 sm:w-44 object-contain shrink-0" />
         {/* SEO: H1 with primary keyword - AI profile picture background remover */}
-        <h1 className="max-w-3xl text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl text-foreground text-left">
+        <h1 className="max-w-3xl text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl text-foreground text-center sm:text-left">
           Free AI Profile Picture{" "}
           <span className="text-primary">Background Remover</span>
         </h1>
