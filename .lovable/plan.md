@@ -1,35 +1,40 @@
 
-## Hero Logo Repositioning + Nav Logo Background Fix
+
+## Mobile-Responsive Hero Logo + Hamburger Nav Menu
 
 ### Changes
 
-#### 1. `src/components/HeroSection.tsx` -- Move logo left of title, shrink to ~h-44
+#### 1. `src/components/HeroSection.tsx` -- Stack logo above title on mobile, shrink it
 
-Wrap the logo and H1 in a horizontal flex row. Shrink logo from `h-60 w-60` to `h-44 w-44`. Set H1 to `text-left`.
+Change the logo+title flex container to stack vertically on mobile (`flex-col`) and go horizontal on `sm:` and up (`sm:flex-row`). Shrink the logo on mobile from `h-44 w-44` to `h-32 w-32` using responsive classes.
 
 ```tsx
-<div className="flex items-center gap-6">
-  <img src="/logo-icon.png" alt="Private Photo Studio" className="h-44 w-44 object-contain shrink-0" />
-  <h1 className="max-w-3xl text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl text-foreground text-left">
-    Free AI Profile Picture{" "}
-    <span className="text-primary">Background Remover</span>
-  </h1>
+<div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
+  <img src="/logo-icon.png" alt="Private Photo Studio"
+       className="h-32 w-32 sm:h-44 sm:w-44 object-contain shrink-0" />
+  <h1 className="... text-center sm:text-left">...</h1>
 </div>
 ```
 
-#### 2. `src/components/Header.tsx` -- Clip logo to prevent white background overflow
+The H1 centers on mobile and left-aligns on `sm:`.
 
-The `h-16 w-16` logo image has a white/opaque background that bleeds past the nav bar's bottom border. Fix by adding `overflow-hidden` to the nav container and making the logo background transparent via CSS. Since the PNG itself has a white background baked in, the simplest fix is to clip the nav element with `overflow-hidden` so nothing visually extends below the border line.
+#### 2. `src/components/Header.tsx` -- Replace nav links with hamburger menu on mobile
 
-```tsx
-<nav className="container mx-auto flex items-center justify-between h-14 px-4 overflow-hidden">
+- Add a hamburger icon button (from lucide `Menu` / `X`) visible only on small screens (`sm:hidden`).
+- Hide the text nav links on mobile (`hidden sm:flex`).
+- When the hamburger is tapped, show a dropdown/sheet with the Editor and About links.
+- "Private Photo Studio" text stays visible since the nav links no longer compete for space.
+- Use a simple state toggle with a dropdown panel or the existing Sheet component for the mobile menu.
+
 ```
-
-This keeps the icon at `h-16 w-16` (so it appears large) but clips any overflow so the white background doesn't cross the bottom border.
+Desktop: [Logo] Private Photo Studio          Editor  About
+Mobile:  [Logo] Private Photo Studio              [hamburger]
+```
 
 ### Files to modify
 
 | File | Change |
 |------|--------|
-| `src/components/HeroSection.tsx` | Wrap logo + H1 in horizontal flex, shrink logo to `h-44 w-44` |
-| `src/components/Header.tsx` | Add `overflow-hidden` to `<nav>` to clip logo overflow |
+| `src/components/HeroSection.tsx` | Responsive flex direction + smaller mobile logo (`h-32 w-32`) |
+| `src/components/Header.tsx` | Hide nav links on mobile, add hamburger menu with Sheet/dropdown |
+
