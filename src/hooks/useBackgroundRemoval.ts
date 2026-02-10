@@ -11,6 +11,85 @@ interface BackgroundRemovalState {
 }
 
 /**
+ * Generic retry wrapper for async operations that may transiently fail.
+ *
+ * **Why this exists:** Android Chrome intermittently throws
+ * `InvalidStateError: The source image could not be decoded` when loading
+ * images via `URL.createObjectURL()` + `new Image()`. The failure is caused
+ * by resource contention between the browser's image decoder and WASM memory
+ * allocation during model loading. Retrying after a short delay succeeds.
+ *
+ * **How it ties in:** The optional `onRetry` callback lets callers (e.g.
+ * `processImage`) update the React status message shown in `PreviewSection`,
+ * so the user sees "Preparing image (attempt 2 of 3)…" instead of silence.
+ *
+ * @param fn        - The async operation to attempt.
+ * @param options.maxAttempts - How many times to try before giving up (default 3).
+ * @param options.delayMs     - Milliseconds to wait between retries (default 500).
+ * @param options.onRetry     - Called before each retry with (attemptNumber, maxAttempts).
+ */
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  options: {
+    maxAttempts?: number;
+    delayMs?: number;
+    onRetry?: (attempt: number, maxAttempts: number) => void;
+  } = {},
+): Promise<T> {
+  const { maxAttempts = 3, delayMs = 500, onRetry } = options;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      const isLastAttempt = attempt === maxAttempts;
+      if (isLastAttempt) throw err;
+
+      // Log retry for diagnostics — helpful when reading error reports.
+      console.warn(
+        `[withRetry] Attempt ${attempt}/${maxAttempts} failed, retrying in ${delayMs}ms:`,
+        err,
+      );
+
+      // Notify caller so it can update UI (e.g. status message).
+      onRetry?.(attempt + 1, maxAttempts);
+
+      // Wait before retrying — gives the browser time to release decoder resources.
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+  }
+
+  // TypeScript: unreachable, but satisfies the compiler.
+  throw new Error("withRetry: exhausted attempts");
+}
+
+/**
+ * Load a Blob as an HTMLImageElement.
+ *
+ * Uses `<img>` element instead of `createImageBitmap` because the latter is
+ * flaky on Android Chrome (see docs/android-image-decode-retry.md).
+ *
+ * Wrapped with `withRetry` internally to handle transient decode failures
+ * caused by browser resource pressure during WASM model loading.
+ */
+function loadImageFromBlob(
+  blob: Blob,
+  retryOptions?: Parameters<typeof withRetry>[1],
+): Promise<HTMLImageElement> {
+  return withRetry(
+    () =>
+      new Promise<HTMLImageElement>((resolve, reject) => {
+        const url = URL.createObjectURL(blob);
+        const img = new Image();
+        img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+        img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Failed to load image")); };
+        img.src = url;
+      }),
+    retryOptions,
+  );
+}
+
+/**
  * Downscale an image file if either dimension exceeds maxDim.
  * Uses an <img> element for decoding (more compatible on Android than createImageBitmap).
  * Returns the original file as-is if already within bounds.
@@ -18,49 +97,48 @@ interface BackgroundRemovalState {
  * Why 2048px? Android WebGPU max texture size is commonly 4096-8192, but
  * real-world failures happen well below that due to GPU memory pressure.
  * 2048px preserves good quality while fitting comfortably in mobile GPU memory.
+ *
+ * The internal image load is wrapped with `withRetry` to handle transient
+ * `InvalidStateError` on Android Chrome (see docs/android-image-decode-retry.md).
  */
-/**
- * Load a Blob as an HTMLImageElement (more reliable than createImageBitmap on Android Chrome).
- */
-function loadImageFromBlob(blob: Blob): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const url = URL.createObjectURL(blob);
-    const img = new Image();
-    img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
-    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Failed to load image")); };
-    img.src = url;
-  });
-}
+async function resizeImageFile(
+  file: File,
+  maxDim = 2048,
+  retryOptions?: Parameters<typeof withRetry>[1],
+): Promise<Blob> {
+  // Wrap the image loading step in retry logic — this is the step that
+  // intermittently fails on Android Chrome under WASM memory pressure.
+  const img = await withRetry(
+    () =>
+      new Promise<HTMLImageElement>((resolve, reject) => {
+        const url = URL.createObjectURL(file);
+        const el = new Image();
+        el.onload = () => { URL.revokeObjectURL(url); resolve(el); };
+        el.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Failed to load image for resizing")); };
+        el.src = url;
+      }),
+    retryOptions,
+  );
 
-async function resizeImageFile(file: File, maxDim = 2048): Promise<Blob> {
-  return new Promise((resolve, reject) => {
-    const url = URL.createObjectURL(file);
-    const img = new Image();
-    img.onload = () => {
-      URL.revokeObjectURL(url);
-      const { naturalWidth: w, naturalHeight: h } = img;
-      if (w <= maxDim && h <= maxDim) {
-        resolve(file);
-        return;
-      }
-      const scale = Math.min(maxDim / w, maxDim / h);
-      const nw = Math.round(w * scale);
-      const nh = Math.round(h * scale);
-      const canvas = document.createElement("canvas");
-      canvas.width = nw;
-      canvas.height = nh;
-      const ctx = canvas.getContext("2d")!;
-      ctx.drawImage(img, 0, 0, nw, nh);
-      canvas.toBlob((blob) => {
-        if (blob) resolve(blob);
-        else reject(new Error("Failed to resize image"));
-      }, "image/png");
-    };
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      reject(new Error("Failed to load image for resizing"));
-    };
-    img.src = url;
+  const { naturalWidth: w, naturalHeight: h } = img;
+  if (w <= maxDim && h <= maxDim) {
+    return file;
+  }
+
+  const scale = Math.min(maxDim / w, maxDim / h);
+  const nw = Math.round(w * scale);
+  const nh = Math.round(h * scale);
+  const canvas = document.createElement("canvas");
+  canvas.width = nw;
+  canvas.height = nh;
+  const ctx = canvas.getContext("2d")!;
+  ctx.drawImage(img, 0, 0, nw, nh);
+
+  return new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (blob) resolve(blob);
+      else reject(new Error("Failed to resize image"));
+    }, "image/png");
   });
 }
 
@@ -135,8 +213,19 @@ export function useBackgroundRemoval() {
     try {
       const { pipeline, RawImage } = await import("@huggingface/transformers");
 
-      // Pre-process: downscale large images to stay within GPU limits
-      const resizedBlob = await resizeImageFile(file);
+      // Pre-process: downscale large images to stay within GPU limits.
+      // Retry options update the status message so the user sees progress
+      // during transient Android decode failures (see docs/android-image-decode-retry.md).
+      const resizedBlob = await resizeImageFile(file, 2048, {
+        maxAttempts: 3,
+        delayMs: 500,
+        onRetry: (attempt, max) => {
+          setState((s) => ({
+            ...s,
+            statusMessage: `Preparing image (attempt ${attempt} of ${max})…`,
+          }));
+        },
+      });
 
       setState((s) => ({ ...s, statusMessage: `Loading model (${device}, ${reason})…` }));
 
@@ -153,7 +242,8 @@ export function useBackgroundRemoval() {
       // result is an array with mask data — get the first result
       const maskData = result[0];
 
-      // Load resized image to composite (use resized blob for consistent dimensions)
+      // Load resized image to composite (use resized blob for consistent dimensions).
+      // Retry handles transient Android decode failures during compositing step.
       const rawImage = await RawImage.fromBlob(resizedBlob);
       const { width, height } = rawImage;
 
@@ -163,8 +253,17 @@ export function useBackgroundRemoval() {
       canvas.height = height;
       const ctx = canvas.getContext("2d")!;
 
-      // Draw the resized image
-      const imgEl = await loadImageFromBlob(resizedBlob);
+      // Draw the resized image — loadImageFromBlob retries internally on transient failures.
+      const imgEl = await loadImageFromBlob(resizedBlob, {
+        maxAttempts: 3,
+        delayMs: 500,
+        onRetry: (attempt, max) => {
+          setState((s) => ({
+            ...s,
+            statusMessage: `Compositing image (attempt ${attempt} of ${max})…`,
+          }));
+        },
+      });
       ctx.drawImage(imgEl, 0, 0);
 
       // Get the mask as a RawImage and resize to match
