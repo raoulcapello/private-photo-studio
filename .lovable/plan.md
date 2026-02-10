@@ -1,69 +1,92 @@
 
 
-## Add Automatic Retry Logic for Transient Image Decoding Failures
+## Restructure README into Shorter Docs
 
-### Problem
+### Overview
 
-On Android Chrome (observed on Android 10, Chrome 144), the browser's image decoder intermittently throws `InvalidStateError: The source image could not be decoded` when loading images via `URL.createObjectURL()` + `new Image()`. This is a transient failure caused by resource pressure during WASM model loading. Retrying the same image succeeds after a few attempts.
+Break the current README.md into focused pages in `docs/`, keep the README short and high-level with links, and add the three uploaded screenshots as example images with photo credits.
 
-### Changes
-
-#### 1. `src/hooks/useBackgroundRemoval.ts` -- Add retry wrappers
-
-Create a generic `withRetry()` helper at the top of the file that:
-- Accepts an async function, a max attempt count (default 3), and a delay (default 500ms).
-- On failure, waits the delay then retries.
-- Logs each retry attempt to the console for diagnostics.
-
-Wrap two call sites with retry logic:
-- **`resizeImageFile()`** -- the initial image load for resizing (line 37-64). Wrap the internal `new Image()` load in the retry helper.
-- **`loadImageFromBlob()`** -- used for compositing (line 25-33). Wrap similarly.
-
-Update the `processImage` function to show retry status in `statusMessage`:
-- On the resize step: `"Preparing image (attempt 2 of 3)…"`
-- This way the user sees something is happening rather than a silent wait.
-
-Add clear comments on every retry-related line explaining:
-- **What**: retrying image decode on transient failure.
-- **Why**: Android Chrome intermittently fails to decode images under resource pressure during WASM model loading.
-- **How**: ties into the status message shown in `PreviewSection` via `statusMessage` state.
-
-#### 2. `docs/android-image-decode-retry.md` -- New documentation
-
-Create a detailed document covering:
-- **Issue**: Description of the `InvalidStateError: The source image could not be decoded` error.
-- **Environment**: Android Chrome, particularly older versions (Android 10+), WASM backend.
-- **Root cause**: Browser image decoder contention with WASM memory allocation. The decoder shares resources with the main thread; under pressure from model loading, it intermittently fails.
-- **Evidence**: Error report from 2026-02-10, 0.1 MB JPEG, succeeded on 4th attempt.
-- **Solution**: Automatic retry with 500ms delay, up to 3 attempts, with user-visible status messages.
-- **Affected code**: `loadImageFromBlob()` and `resizeImageFile()` in `useBackgroundRemoval.ts`.
-- **References**: Link to related Chromium bug patterns if known.
-
-#### 3. `CHANGELOG.md` -- Add entry
-
-Add bullet: "Added automatic retry logic (up to 3 attempts) for transient image decoding failures on Android, with user-visible status messages."
-
-### Implementation Detail
+### New File Structure
 
 ```text
-withRetry(fn, { maxAttempts: 3, delayMs: 500, onRetry })
-  |
-  +-- attempt 1 --> fails (InvalidStateError)
-  |     onRetry(1, 3) --> setState("Preparing image (attempt 2 of 3)...")
-  |     wait 500ms
-  +-- attempt 2 --> fails
-  |     onRetry(2, 3) --> setState("Preparing image (attempt 3 of 3)...")
-  |     wait 500ms
-  +-- attempt 3 --> succeeds --> continue pipeline
+README.md                              (rewritten -- short overview + links)
+docs/
+  android-image-decode-retry.md        (already exists, unchanged)
+  verifying-privacy.md                 (new -- "Verifying Browser-Only Processing")
+  running-locally.md                   (new -- prerequisites, install, dev, build, tests)
+  technical-decisions.md               (new -- WebGPU, canvas, blob URLs, RMBG-1.4)
+  troubleshooting.md                   (new -- slow model, WASM fallback, browser support)
+public/
+  screenshots/
+    example-1.png                      (copy from user-uploads, green background removal)
+    example-2.png                      (copy from user-uploads, custom yellow-green bg)
+    example-3.png                      (copy from user-uploads, navy bg + eraser)
 ```
 
-The `onRetry` callback is passed from `processImage` so it can update the status message without the retry helper needing to know about React state.
+### File Details
+
+#### `README.md` (rewritten)
+
+Short, scannable README containing:
+- Project name and one-line description
+- 3 screenshot examples in a row with photo credits beneath
+- "Key Files" table (kept from original)
+- "Links & Support" section (kept from original)
+- Links to each doc page:
+  - [Verifying Privacy](docs/verifying-privacy.md)
+  - [Running Locally](docs/running-locally.md)
+  - [Technical Decisions](docs/technical-decisions.md)
+  - [Troubleshooting](docs/troubleshooting.md)
+  - [Android Image Decode Retry](docs/android-image-decode-retry.md)
+
+Photo credits block at the bottom of the examples section using the exact HTML provided by the user.
+
+#### `docs/verifying-privacy.md` (new)
+
+Content extracted from README "Verifying Browser-Only Processing" section:
+- Method 1: Network Inspection
+- Method 2: Code Review
+- Method 3: Understanding the Runtime
+
+#### `docs/running-locally.md` (new)
+
+Content extracted from README "Running Locally" section:
+- Prerequisites
+- Installation
+- Development Server
+- Production Build
+- Running Tests
+
+#### `docs/technical-decisions.md` (new)
+
+Content extracted from README "Technical Decisions" section:
+- Why WebGPU first, then WASM?
+- Why canvas compositing?
+- Why local blob URLs?
+- Why RMBG-1.4?
+
+#### `docs/troubleshooting.md` (new)
+
+Content extracted from README "Troubleshooting" section:
+- Slow model loading
+- Slow processing
+- Browser not supported
+- Link to `android-image-decode-retry.md` for the specific Android decode issue
+
+### Screenshots
+
+The three uploaded images will be copied to `public/screenshots/` and referenced in README.md using relative paths (`public/screenshots/example-1.png` etc.) so they render on GitHub.
 
 ### Files to create/modify
 
 | File | Action |
 |------|--------|
-| `src/hooks/useBackgroundRemoval.ts` | Modify -- add `withRetry()` helper, wrap `resizeImageFile` and `loadImageFromBlob`, update status messages |
-| `docs/android-image-decode-retry.md` | Create -- detailed documentation of the issue, cause, and solution |
-| `CHANGELOG.md` | Modify -- add entry |
+| `public/screenshots/example-1.png` | Copy from user-uploads (green bg removal) |
+| `public/screenshots/example-2.png` | Copy from user-uploads (yellow-green bg) |
+| `public/screenshots/example-3.png` | Copy from user-uploads (navy bg + eraser) |
+| `README.md` | Rewrite -- short overview, screenshots, links to docs |
+| `docs/verifying-privacy.md` | Create -- extracted from README |
+| `docs/running-locally.md` | Create -- extracted from README |
+| `docs/technical-decisions.md` | Create -- extracted from README |
+| `docs/troubleshooting.md` | Create -- extracted from README |
 
