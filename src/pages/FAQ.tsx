@@ -21,7 +21,7 @@ const faqItems = [
     answer: (
       <>
         <p className="mb-3">
-          We use BRIA AI's{" "}
+          The app uses BRIA AI's{" "}
           <a
             href="https://huggingface.co/briaai/RMBG-1.4"
             target="_blank"
@@ -35,9 +35,11 @@ const faqItems = [
         </p>
         <p className="mb-3">
           It works well in many cases, but I don't feel it's ready to charge
-          for. It's also a tool I wanted for myself, so I built it and decided
-          to share it with the world as a showcase of my work as a software
-          architect and developer.
+          for.</p>
+          <p className="mb-3">
+          It's also a tool I wanted for myself, so I built it and decided
+          to share it with the world as both a free tool, and as a showcase of my work 
+          as a software architect and developer.
         </p>
       </>
     ),
