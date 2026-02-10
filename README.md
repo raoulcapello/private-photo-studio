@@ -1,4 +1,4 @@
-# pfppg — Private Photo Studio
+# Private Photo Studio
 
 Remove backgrounds from profile pictures. All processing happens in your browser — nothing is uploaded.
 
