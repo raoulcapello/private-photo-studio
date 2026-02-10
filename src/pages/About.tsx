@@ -1,7 +1,7 @@
 import { Header } from "@/components/Header";
 import { PrivacyFooter } from "@/components/PrivacyFooter";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Briefcase, Users, Shield, Image, Code, AlertCircle, Monitor } from "lucide-react";
+import { Briefcase, Users, Shield, Image, Code } from "lucide-react";
 
 /**
  * About Page
@@ -129,50 +129,6 @@ const About = () => {
               removal tools upload your images to remote servers, where they could be stored, analyzed, 
               or used for training AI models. Private Photo Studio keeps everything on your device—your 
               photos never leave your browser.
-            </p>
-          </section>
-
-          {/* Model Accuracy & Limitations */}
-          <section className="mb-16">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <AlertCircle className="h-5 w-5 text-primary" />
-              </div>
-              <h2 className="text-2xl font-semibold text-foreground">
-                Model Accuracy & Limitations
-              </h2>
-            </div>
-            <p className="text-muted-foreground leading-relaxed mb-4">
-              The model may not handle all pictures equally well—try different pictures and see what 
-              works best.
-            </p>
-            <p className="text-muted-foreground leading-relaxed">
-              Results depend on factors like lighting, contrast between subject and background, and 
-              image clarity. Photos with clear edges and good lighting typically produce the best results.
-            </p>
-          </section>
-
-          {/* Desktop vs. Mobile */}
-          <section className="mb-16">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <Monitor className="h-5 w-5 text-primary" />
-              </div>
-              <h2 className="text-2xl font-semibold text-foreground">
-                Desktop vs. Mobile
-              </h2>
-            </div>
-            <p className="text-muted-foreground leading-relaxed mb-4">
-              Background removal works on all devices—phones, tablets, and desktops. However, some 
-              editing features are optimized for desktop browsers:
-            </p>
-            <ul className="text-muted-foreground space-y-2 mb-4">
-              <li>• <strong className="text-foreground">Eraser brush:</strong> Available on desktop only. Lets you manually clean up leftover artifacts by painting them transparent.</li>
-              <li>• <strong className="text-foreground">Custom color picker:</strong> The eyedropper tool depends on browser support and works best on desktop.</li>
-              <li>• <strong className="text-foreground">Preset backgrounds:</strong> Transparent, white, gray, and navy options work on all devices.</li>
-            </ul>
-            <p className="text-muted-foreground leading-relaxed">
-              For the best editing experience, we recommend using a desktop browser.
             </p>
           </section>
 
