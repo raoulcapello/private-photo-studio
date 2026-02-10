@@ -2,6 +2,11 @@
 
 ## 2026-02-10
 
+### Added: Automatic retry for transient image decoding failures
+
+- Added automatic retry logic (up to 3 attempts, 500ms delay) for transient `InvalidStateError` image decoding failures on Android Chrome, with user-visible status messages.
+- New documentation: `docs/android-image-decode-retry.md`.
+
 ### Added: FAQ page and content reorganization
 
 - New FAQ page with accordion UI covering pricing, privacy, performance, mobile support, formats, and licensing.
