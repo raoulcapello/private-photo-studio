@@ -152,6 +152,46 @@ const faqItems = [
       </>
     ),
   },
+  {
+    id: "feedback",
+    question: "Are you open to feedback and suggestions?",
+    answer: (
+      <>
+        <p className="mb-3">
+          Yes, very much so! If you have a feature request, bug report, or
+          suggestion, the best place to share it is on{" "}
+          <a
+            href="https://github.com/raoulcapello/private-photo-studio/issues"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary hover:underline"
+          >
+            GitHub Issues
+          </a>
+          .
+        </p>
+        <p>
+          You can also reach me directly via{" "}
+          <a
+            href="mailto:raoul@raoulcapello.nl"
+            className="text-primary hover:underline"
+          >
+            email
+          </a>{" "}
+          or my{" "}
+          <a
+            href="https://raoulcapello.nl"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary hover:underline"
+          >
+            website
+          </a>
+          .
+        </p>
+      </>
+    ),
+  },
 ];
 
 const FAQ = () => {
