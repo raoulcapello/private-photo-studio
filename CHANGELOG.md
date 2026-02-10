@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-02-10
+
+### Added: FAQ page and content reorganization
+
+- New FAQ page with accordion UI covering pricing, privacy, performance, mobile support, formats, and licensing.
+- Added FAQ link to main navigation (desktop and mobile).
+- Migrated "Model Accuracy & Limitations" and "Desktop vs. Mobile" sections from About page to FAQ.
+- About page now focuses on: what the tool is, use cases, how it works, privacy, and open source.
+
 ## 2026-02-09
 
 ### Improved: Mobile experience and platform guidance

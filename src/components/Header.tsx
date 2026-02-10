@@ -40,6 +40,13 @@ export function Header() {
             Editor
           </NavLink>
           <NavLink
+            to="/faq"
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            activeClassName="text-foreground font-medium"
+          >
+            FAQ
+          </NavLink>
+          <NavLink
             to="/about"
             className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             activeClassName="text-foreground font-medium"
@@ -69,6 +76,14 @@ export function Header() {
                 onClick={() => setOpen(false)}
               >
                 Editor
+              </NavLink>
+              <NavLink
+                to="/faq"
+                className="text-base text-muted-foreground hover:text-foreground transition-colors"
+                activeClassName="text-foreground font-medium"
+                onClick={() => setOpen(false)}
+              >
+                FAQ
               </NavLink>
               <NavLink
                 to="/about"
