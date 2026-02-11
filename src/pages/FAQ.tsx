@@ -21,25 +21,12 @@ const faqItems = [
     answer: (
       <>
         <p className="mb-3">
-          The app uses BRIA AI's{" "}
-          <a
-            href="https://huggingface.co/briaai/RMBG-1.4"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-primary hover:underline"
-          >
-            RMBG-1.4 model
-          </a>
-          , which is free for non-commercial use. The app is still in
-          development—I'm gathering feedback to make it better.
+          It's a tool I wanted for myself, so I built it and decided to share it
+          with the world.
         </p>
         <p className="mb-3">
-          It works well in many cases, but I don't feel it's ready to charge
-          for.</p>
-          <p className="mb-3">
-          It's also a tool I wanted for myself, so I built it and decided
-          to share it with the world as both a free tool, and as a showcase of my work 
-          as a software architect and developer.
+          It also serves as a showcase of my work as a software architect and
+          developer.
         </p>
       </>
     ),
@@ -98,8 +85,8 @@ const faqItems = [
         </ul>
         <p>
           On mobile, the app uses a slower but more compatible processing mode
-          (WASM instead of WebGPU). For the best editing experience, we recommend
-          using a desktop browser.
+          (WASM instead of WebGPU). For the best editing experience, we
+          recommend using a desktop browser.
         </p>
       </>
     ),
@@ -138,8 +125,16 @@ const faqItems = [
     answer: (
       <>
         <p className="mb-3">
-          The app code is MIT-licensed, but the underlying AI model (RMBG-1.4 by
-          BRIA AI) has its own license terms. Check the{" "}
+          The app code is MIT-licensed, but the underlying AI model (
+          <a
+            href="https://huggingface.co/briaai/RMBG-1.4"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary hover:underline"
+          >
+            RMBG-1.4 by BRIA AI
+          </a>
+          ) has its own license terms. Check the{" "}
           <a
             href="https://huggingface.co/briaai/RMBG-1.4"
             target="_blank"
@@ -209,7 +204,8 @@ const FAQ = () => {
               Frequently Asked Questions
             </h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Common questions about privacy, performance, and how the app works.
+              Common questions about privacy, performance, and how the app
+              works.
             </p>
           </section>
 
