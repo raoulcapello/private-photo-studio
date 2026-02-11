@@ -28,6 +28,18 @@ const faqItems = [
           It also serves as a showcase of my work as a software architect and
           developer.
         </p>
+        <p className="mb-3">
+          If you like the app, please consider supporting me with a{" "}
+          <a
+            href="https://liberapay.com/raoul/donate"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary hover:underline"
+          >
+            donation
+          </a>
+          .
+        </p>
       </>
     ),
   },
