@@ -20,8 +20,14 @@ export function usePageMeta(meta: PageMeta): void {
     const descriptionEl = document.querySelector('meta[name="description"]');
     if (descriptionEl) descriptionEl.setAttribute("content", meta.description);
 
-    const canonicalEl = document.querySelector('link[rel="canonical"]');
-    if (canonicalEl) canonicalEl.setAttribute("href", meta.canonical);
+    // Canonical: create if doesn't exist, update if it does
+    let canonicalEl = document.querySelector('link[rel="canonical"]');
+    if (!canonicalEl) {
+      canonicalEl = document.createElement("link");
+      canonicalEl.setAttribute("rel", "canonical");
+      document.head.appendChild(canonicalEl);
+    }
+    canonicalEl.setAttribute("href", meta.canonical);
 
     const ogTitle = meta.ogTitle ?? meta.title;
     const ogDescription = meta.ogDescription ?? meta.description;

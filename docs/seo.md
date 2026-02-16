@@ -13,7 +13,7 @@ We use a small custom hook, **`usePageMeta`**, that runs in each page component 
 
 - `document.title`
 - The existing `<meta name="description">` (from `index.html`) — update `content`
-- The existing `<link rel="canonical">` — update `href`
+- `<link rel="canonical">` — create if missing, update `href` if exists
 - Optionally Open Graph and Twitter meta when we want shares to reflect the current URL
 
 The hook is a single `useEffect` that queries these elements and sets their attributes. No new dependencies, no extra abstraction. Each page calls `usePageMeta({ title, description, canonical })` once at the top of the component.
@@ -36,11 +36,39 @@ Our case is simpler:
 
 A small imperative hook is enough and stays easy to read and maintain. Adding a dependency and a declarative API would add complexity without a clear benefit for this project size. If we later introduce SSR, many more routes, or non-developers editing meta, we can reassess and consider a library then.
 
-**React 18 vs 19:** We stay on React 18 for now. The hook approach uses [`useEffect`](https://react.dev/reference/react/useEffect) for side effects, which is the standard React pattern. React 19 adds built-in `<title>` and `<meta>` that React hoists to the head ([React docs: `<title>`](https://react.dev/reference/react-dom/components/title), [React docs: `<meta>`](https://react.dev/reference/react-dom/components/meta)), so we could drop the hook and use declarative meta when we upgrade—but we don’t upgrade just for that; the benefit doesn’t justify the migration cost. Revisit React 19 when we have other reasons to upgrade (e.g. Actions, `use()`), then switch to native document metadata if we want.
+**React 18 vs 19:** We stay on React 18 for now. The hook approach uses [`useEffect`](https://react.dev/reference/react/useEffect) for side effects, which is the standard React pattern. React 19 adds built-in `<title>` and `<meta>` that React hoists to the head ([React docs: `<title>`](https://react.dev/reference/react-dom/components/title), [React docs: `<meta>`](https://react.dev/reference/react-dom/components/meta)), so we could drop the hook and use declarative meta when we upgrade—but we don't upgrade just for that; the benefit doesn't justify the migration cost. Revisit React 19 when we have other reasons to upgrade (e.g. Actions, `use()`), then switch to native document metadata if we want.
 
-## Other SEO pieces
+## Additional SEO Considerations
 
-- **Canonical and redirects:** `index.html` sets the default canonical to `https://privatephoto.studio/`. Hosting (e.g. Cloudflare) should 301 `http` and `www` to that URL. Per-route canonical is set by `usePageMeta` when each page component mounts. Note: Crawlers that don't execute JavaScript may see the initial canonical (`/`) for all routes; crawlers that execute JS (like Google) will see the correct per-route canonical. This is a known SPA limitation; pages in the sitemap (`/faq`, `/about`) are correctly self-canonical once JS executes.
-- **H1:** The homepage H1 is in the React tree (HeroSection). For crawlers that don’t run JS, we add a visually hidden H1 in `index.html` (e.g. `sr-only`).
-- **Internal links and content:** The app nav (Header) and main content (HeroSection) are rendered by React, so the initial HTML has no `<a href="...">` links and minimal text. To fix “Page has no outgoing links”, “Canonical URL has no incoming internal links”, and “Low word count” (Google/Ahrefs), we add a `<noscript>` block in `index.html` with static links to `/`, `/faq`, `/about` and a descriptive paragraph (50+ words) explaining what the app does. Crawlers that parse the raw HTML see these links and content; with JS enabled the React app is shown and the noscript is hidden. **Official guidance:** [Google Search Central: Links Crawlable](https://developers.google.com/search/docs/crawling-indexing/links-crawlable) states that "Google can only crawl your link if it's an `<a>` HTML element (also known as anchor element) with an `href` attribute" and recommends keeping `href` present even when adding JavaScript functionality (e.g., `<a href="/products" onclick="javascript:goTo('products')">`). [Google Search Central: JavaScript SEO Basics](https://developers.google.com/search/docs/crawling-indexing/javascript/javascript-seo-basics) explains that Google can render JavaScript and parse HTML links during crawling, noting that "Googlebot then parses the response for other URLs in the `href` attribute of HTML links and adds the URLs to the crawl queue." [Ahrefs: Crawling JavaScript](https://ahrefs.com/blog/crawling-javascript/) notes that most crawlers cannot execute JavaScript (only Ahrefs and a few others can), so static links in the initial HTML ensure discoverability across all crawler types.
-- **Structured data:** Optional; a single JSON-LD block (e.g. `WebApplication`) in `index.html` can be added later if we want richer snippets.
+### Canonical URLs
+
+Canonical URLs are set entirely via JavaScript using the `usePageMeta` hook—there is no canonical tag in the initial HTML. This avoids conflicting signals between initial HTML and JavaScript-rendered content. Each route (`/`, `/faq`, `/about`) sets its own self-referencing canonical when the page component mounts.
+
+**Official guidance:** [Ahrefs: Canonical Tags](https://ahrefs.com/blog/canonical-tags/) ([JavaScript section](https://ahrefs.com/blog/canonical-tags#mistake-6-having-multiple-relcanonical-tags)) states: "If you have no canonical URL specified in the HTML response and then add a rel=canonical tag with JavaScript then it should be respected when Google renders the page." This approach is acceptable for SPAs without SSR, though Google prefers canonicals in initial HTML when possible.
+
+### Redirects
+
+Hosting (e.g. Cloudflare) should 301 redirect `http` and `www` to `https://privatephoto.studio/`. See [Ahrefs: 301 Redirects Explained](https://ahrefs.com/blog/301-redirects/) for best practices.
+
+### Sitemap
+
+All routes are included in `sitemap.xml` since there are no conflicting canonical signals. Google, Ahrefs, and other JavaScript-executing crawlers will see the correct self-canonical URLs after rendering.
+
+### H1 Tags
+
+The homepage H1 is in the React tree (HeroSection). For crawlers that don't run JS, we add a visually hidden H1 in `index.html` using the `sr-only` class.
+
+### Internal Links and Content
+
+The app nav and main content are rendered by React, so the initial HTML has no `<a>` links and minimal text. To fix "Page has no outgoing links", "Canonical URL has no incoming internal links", and "Low word count" issues, we add a `<noscript>` block in `index.html` with:
+
+- Static links to `/`, `/faq`, `/about`
+- A descriptive paragraph (50+ words) explaining what the app does
+
+Crawlers that parse raw HTML see these links and content; with JS enabled the React app is shown and the noscript is hidden.
+
+**Official guidance:** [Google Search Central: Links Crawlable](https://developers.google.com/search/docs/crawling-indexing/links-crawlable) states that "Google can only crawl your link if it's an `<a>` HTML element (also known as anchor element) with an `href` attribute." [Google Search Central: JavaScript SEO Basics](https://developers.google.com/search/docs/crawling-indexing/javascript/javascript-seo-basics) explains that Google can render JavaScript and parse HTML links during crawling. [Ahrefs: Crawling JavaScript](https://ahrefs.com/blog/crawling-javascript/) notes that most crawlers cannot execute JavaScript (only Ahrefs and a few others can), so static links in the initial HTML ensure discoverability across all crawler types.
+
+### Structured Data
+
+Optional; a single JSON-LD block (e.g. `WebApplication`) in `index.html` can be added later if we want richer snippets.
