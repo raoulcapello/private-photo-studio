@@ -4,8 +4,17 @@ import { PreviewSection } from "@/components/PreviewSection";
 import { PrivacyFooter } from "@/components/PrivacyFooter";
 import { Header } from "@/components/Header";
 import { useBackgroundRemoval } from "@/hooks/useBackgroundRemoval";
+import { usePageMeta } from "@/hooks/usePageMeta";
+
+const INDEX_META = {
+  title: "Free AI Profile Picture Background Remover | Private Photo Studio",
+  description:
+    "Remove backgrounds from profile photos for LinkedIn, CV, Instagram, Discord & more. Free AI headshot generator that runs 100% in your browser—private and secure.",
+  canonical: "https://privatephoto.studio/",
+} as const;
 
 const Index = () => {
+  usePageMeta(INDEX_META);
   const [originalUrl, setOriginalUrl] = useState<string | null>(null);
   const { status, statusMessage, resultUrl, error, errorLog, processImage, reset, downloadResult, downloadWithBackground, updateResult, undoEdit, canUndo } =
     useBackgroundRemoval();

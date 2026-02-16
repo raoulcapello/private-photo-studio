@@ -1,7 +1,15 @@
 import { Header } from "@/components/Header";
 import { PrivacyFooter } from "@/components/PrivacyFooter";
+import { usePageMeta } from "@/hooks/usePageMeta";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Briefcase, Users, Shield, Image, Code } from "lucide-react";
+
+const ABOUT_META = {
+  title: "About | Private Photo Studio",
+  description:
+    "Free AI headshot and profile picture background remover for LinkedIn, CV, Instagram, Discord. Privacy-first, runs locally in your browser.",
+  canonical: "https://privatephoto.studio/about",
+} as const;
 
 /**
  * About Page
@@ -42,6 +50,7 @@ const steps = [
 ];
 
 const About = () => {
+  usePageMeta(ABOUT_META);
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Header />

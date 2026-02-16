@@ -1,11 +1,19 @@
 import { Header } from "@/components/Header";
 import { PrivacyFooter } from "@/components/PrivacyFooter";
+import { usePageMeta } from "@/hooks/usePageMeta";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+
+const FAQ_META = {
+  title: "FAQ | Private Photo Studio",
+  description:
+    "Common questions about privacy, performance, and how the app works. Free AI profile picture background remover—100% in your browser.",
+  canonical: "https://privatephoto.studio/faq",
+} as const;
 
 /**
  * FAQ Page
@@ -204,6 +212,7 @@ const faqItems = [
 ];
 
 const FAQ = () => {
+  usePageMeta(FAQ_META);
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Header />
